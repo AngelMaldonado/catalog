@@ -56,10 +56,31 @@ export interface ProductRender extends RecordModel {
   img_960: string
 }
 
+export type FondoPagina = 'cover' | 'divider' | 'products' | 'promo' | 'back' | 'filler'
+export const FONDOS: FondoPagina[] = ['cover', 'divider', 'products', 'promo', 'back', 'filler']
+
 export interface Theme extends RecordModel {
   name: string
   slug: string
   season: string
+  palette: { background: string; ink: string; accent: string }
+  fonts: { title: string; body: string }
+  bg_cover: string
+  bg_divider: string
+  bg_products: string
+  bg_promo: string
+  bg_back: string
+  bg_filler: string
+  sort: number
+}
+
+export interface SpecialPage extends RecordModel {
+  catalog: string
+  kind: 'promo' | 'image'
+  title: string
+  body: string
+  image: string
+  position: number
 }
 
 export interface Catalog extends RecordModel {
@@ -70,6 +91,13 @@ export interface Catalog extends RecordModel {
   page_turn: PageTurn
   layout: '1' | '2' | '4'
   category_order: string[] | null
+  bg_cover: string
+  bg_divider: string
+  bg_products: string
+  bg_promo: string
+  bg_back: string
+  bg_filler: string
+  og_image: string
   expand?: { theme?: Theme }
 }
 

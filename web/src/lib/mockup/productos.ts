@@ -100,7 +100,7 @@ export async function arteDe(diseno: Design): Promise<Arte> {
 
 /** Guarda producto (colocación, colores, nombre, precio) y regenera sus renders: actualiza los
  *  de los colores que siguen, crea los de colores nuevos y borra los de colores quitados. */
-export async function guardarProducto(producto: Product, cambios: Partial<Pick<Product, 'name' | 'price' | 'placement' | 'colors'>>, t: GarmentTemplate, arte: Arte, marca: string, onProgreso: Progreso) {
+export async function guardarProducto(producto: Product, cambios: Partial<Pick<Product, 'name' | 'price' | 'placement' | 'colors' | 'category'>>, t: GarmentTemplate, arte: Arte, marca: string, onProgreso: Progreso) {
   const actualizado = await pb.collection('products').update<Product>(producto.id, cambios)
   const existentes = await pb.collection('product_renders').getFullList<ProductRender>({ filter: pb.filter('product = {:p}', { p: producto.id }) })
   const total = actualizado.colors.length
@@ -109,4 +109,11 @@ export async function guardarProducto(producto: Product, cambios: Partial<Pick<P
   await subirRenders(actualizado, t, arte, actualizado.placement, actualizado.colors, marca, () => onProgreso(++hechos, total, 'Generando imágenes…'), existentes)
   for (const r of existentes) if (!actualizado.colors.includes(r.color)) await pb.collection('product_renders').delete(r.id)
   return actualizado
+}
+
+/** Borra el producto (sus renders se van en cascada) y su diseño si ya ningún producto lo usa. */
+export async function borrarProducto(producto: Product) {
+  await pb.collection('products').delete(producto.id)
+  const otros = await pb.collection('products').getList(1, 1, { filter: pb.filter('design = {:d}', { d: producto.design }) })
+  if (!otros.totalItems) await pb.collection('designs').delete(producto.design)
 }

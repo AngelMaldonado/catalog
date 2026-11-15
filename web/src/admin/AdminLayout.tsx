@@ -2,6 +2,7 @@ import { Outlet } from 'react-router'
 import { Toaster } from 'sonner'
 import { BookOpen, Settings, Tags, User } from 'lucide-react'
 import { MenuInferior, type ItemMenu } from '../components/shell/MenuInferior'
+import { Confirmaciones } from '../components/shell/Confirmar'
 
 const items: ItemMenu[] = [
   { to: '/admin', texto: 'Catálogos', icono: BookOpen, exacto: true, tambien: '/admin/catalogos' },
@@ -18,6 +19,7 @@ export function AdminLayout() {
       <Outlet />
       <MenuInferior items={items} />
       <Toaster position="top-center" richColors closeButton />
+      <Confirmaciones />
     </div>
   )
 }

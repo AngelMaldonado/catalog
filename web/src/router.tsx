@@ -22,6 +22,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, lazy: async () => ({ Component: (await import('./admin/CatalogsPage')).CatalogsPage }) },
       { path: 'catalogos/:id', lazy: async () => ({ Component: (await import('./admin/CatalogDetailPage')).CatalogDetailPage }) },
+      { path: 'catalogos/:id/vista', lazy: async () => ({ Component: (await import('./admin/VistaPreviaPage')).VistaPreviaPage }) },
       { path: 'catalogos/:id/productos/:pid', lazy: async () => ({ Component: (await import('./admin/ProductEditorPage')).ProductEditorPage }) },
       { path: 'categorias', lazy: async () => ({ Component: (await import('./admin/CategoriesPage')).CategoriesPage }) },
       { path: 'ajustes', lazy: async () => ({ Component: (await import('./admin/SettingsPage')).SettingsPage }) },

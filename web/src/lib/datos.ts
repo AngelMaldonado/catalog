@@ -1,7 +1,7 @@
 // Consultas compartidas del admin.
 import { useQuery } from '@tanstack/react-query'
 import { pb } from './pb'
-import type { Category, GarmentTemplate } from './types'
+import type { Category, GarmentTemplate, Theme } from './types'
 
 /** Token de archivo para los archivos protegidos (renders, originales). Dura ~2 min. */
 export const useTokenArchivos = () =>
@@ -14,3 +14,6 @@ export const useCategorias = () =>
   useQuery({ queryKey: ['categories'], queryFn: () => pb.collection('categories').getFullList<Category>({ sort: 'sort,name' }) })
 
 export const dinero = (n: number, moneda = 'MXN') => new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda, maximumFractionDigits: 0 }).format(n)
+
+export const useTemas = () =>
+  useQuery({ queryKey: ['themes'], queryFn: () => pb.collection('themes').getFullList<Theme>({ sort: 'sort' }), staleTime: 5 * 60_000 })
