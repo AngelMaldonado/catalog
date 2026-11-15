@@ -103,3 +103,13 @@ Use case: ads-marketing. One full-bleed portrait 9:16 Christmas catalog BACK COV
 ```
 
 
+
+## Derivados: máscaras, sombreado y áreas de impresión
+
+`{kind}-mask.png` y `{kind}-shading.png` salen de las fotos base con `pb/tools/garments.mjs` (`just garments prepare`), sin IA ni herramientas externas:
+
+- **Máscara.** El fondo de las fotos es un gris plano (σ local ≈ 0.5) y la tela tiene textura (σ ≥ 1.1), aunque los dos compartan el mismo nivel de gris en los pliegues. Por eso el fondo crece desde el borde sólo por los píxeles sin textura; para medir la textura se le quita a la imagen su tendencia suave, de modo que la viñeta y la sombra de contacto no cuenten. Después se queda la componente más grande, se rellenan los huecos, se erosiona 3 px para quitar el halo y se suaviza el borde 0.8 px.
+- **Sombreado.** Es la luminancia de la prenda normalizada a su blanco (p98 → 255). Se multiplica sobre el tinte y sobre el diseño.
+- **Áreas de impresión.** Se miden sobre las máscaras: el torso de la playera ocupa 0.42 del ancho (~20″), así que un estampado de 12″ × 16″ queda en 0.25 × 0.34. Están en `PRINT_AREAS` y en la migración `1794768200_garment_assets.js`.
+
+Fecha: 2026-11-15.

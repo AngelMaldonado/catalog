@@ -25,6 +25,7 @@ setup:
     fi
     .bin/pocketbase --version
     pnpm -C web install
+    pnpm -C pb/tools install
 
 # PocketBase :{{pb_port}} y Vite :{{web_port}} en la sesión tmux ayetec-catalog
 dev:
@@ -57,6 +58,24 @@ pb action *args:
       user)      CATALOG_SEED_DIR=pb/seed {{pb}} user upsert {{args}} ;;
       migrate)   CATALOG_SEED_DIR=pb/seed {{pb}} migrate {{args}} ;;
       *) echo "uso: just pb superuser|user|migrate ..."; exit 1 ;;
+    esac
+
+# just garments prepare: máscaras, sombreado y vista previa de las prendas del seed
+garments action:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{action}}" in
+      prepare) node pb/tools/garments.mjs --preview ;;
+      *) echo "uso: just garments prepare"; exit 1 ;;
+    esac
+
+# just themes generate [--dry-run] [--theme <slug>] [--page <page>] [--force]: arte con la API de OpenAI
+themes action *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{action}}" in
+      generate) node pb/tools/themes.mjs {{args}} ;;
+      *) echo "uso: just themes generate [--dry-run] [--theme <slug>] [--page <page>] [--force]"; exit 1 ;;
     esac
 
 # just docker build [tag] · just docker run [tag] · just docker stop

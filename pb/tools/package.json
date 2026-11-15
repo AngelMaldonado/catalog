@@ -1,0 +1,9 @@
+{
+  "name": "catalog-asset-tools",
+  "private": true,
+  "type": "module",
+  "description": "Pipelines de assets del seed: máscaras y sombras de prendas, arte de temas (OpenAI Images API).",
+  "dependencies": {
+    "sharp": "0.35.5"
+  }
+}

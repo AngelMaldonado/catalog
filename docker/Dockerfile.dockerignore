@@ -10,3 +10,5 @@
 !pb/pb_migrations/**
 !pb/pb_hooks/**
 !pb/seed/**
+# generated originals stay out of the image (and of git)
+pb/seed/themes/_raw

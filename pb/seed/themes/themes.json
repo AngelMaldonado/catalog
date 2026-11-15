@@ -1,0 +1,41 @@
+{
+  "generico": {
+    "name": "Genérico",
+    "season": "Todo el año",
+    "palette": {
+      "background": "#f4efe6",
+      "ink": "#2a2118",
+      "accent": "#b0643a"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif"
+    }
+  },
+  "navidad": {
+    "name": "Navidad",
+    "season": "Diciembre",
+    "palette": {
+      "background": "#f6efe3",
+      "ink": "#2b1416",
+      "accent": "#8e1b22"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif"
+    }
+  },
+  "muertos": {
+    "name": "Día de Muertos",
+    "season": "Octubre–noviembre",
+    "palette": {
+      "background": "#1d1430",
+      "ink": "#fbefe0",
+      "accent": "#f08c00"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif"
+    }
+  }
+}
