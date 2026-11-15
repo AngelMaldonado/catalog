@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router'
 import { cn } from '../../lib/utils'
 import { marcarDireccion } from '../../lib/transicion'
 
-export type ItemMenu = { to: string; texto: string; icono: LucideIcon; exacto?: boolean }
+export type ItemMenu = { to: string; texto: string; icono: LucideIcon; exacto?: boolean; /** activo también en estas rutas (más adentro) */ tambien?: string }
 
 // Menú inferior de pestañas (patrón de Comandas): tiles de 56 px, el activo con tinte del acento.
 export function MenuInferior({ items }: { items: ItemMenu[] }) {
@@ -18,20 +18,24 @@ export function MenuInferior({ items }: { items: ItemMenu[] }) {
               end={it.exacto}
               viewTransition
               onClick={() => marcarDireccion(pathname, it.to)}
-              className={({ isActive }) =>
-                cn(
+              className={({ isActive: a }) => {
+                const isActive = a || (!!it.tambien && pathname.startsWith(it.tambien))
+                return cn(
                   'relative flex h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-medium transition-colors',
                   isActive ? 'bg-acento-tinte text-acento-texto' : 'text-muted-foreground hover:bg-muted',
                 )
-              }
+              }}
             >
-              {({ isActive }) => (
+              {({ isActive: a }) => {
+                const isActive = a || (!!it.tambien && pathname.startsWith(it.tambien))
+                return (
                 <>
                   {isActive && <span className="absolute top-1.5 right-2.5 size-1.5 rounded-full bg-marca" aria-hidden />}
                   <it.icono className="size-5" strokeWidth={isActive ? 2.25 : 1.75} />
                   {it.texto}
                 </>
-              )}
+                )
+              }}
             </NavLink>
           </li>
         ))}

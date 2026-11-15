@@ -4,7 +4,7 @@ import { BookOpen, Settings, Tags, User } from 'lucide-react'
 import { MenuInferior, type ItemMenu } from '../components/shell/MenuInferior'
 
 const items: ItemMenu[] = [
-  { to: '/admin', texto: 'Catálogos', icono: BookOpen, exacto: true },
+  { to: '/admin', texto: 'Catálogos', icono: BookOpen, exacto: true, tambien: '/admin/catalogos' },
   { to: '/admin/categorias', texto: 'Categorías', icono: Tags },
   { to: '/admin/ajustes', texto: 'Ajustes', icono: Settings },
   { to: '/admin/perfil', texto: 'Perfil', icono: User },

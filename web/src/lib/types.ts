@@ -8,6 +8,54 @@ export interface Category extends RecordModel {
   sort: number
 }
 
+export interface GarmentColor {
+  name: string
+  hex: string
+}
+
+export interface GarmentTemplate extends RecordModel {
+  name: string
+  kind: 'tshirt' | 'hoodie' | 'cap'
+  base: string
+  mask: string
+  shadow: string
+  print_area: [[number, number], [number, number], [number, number], [number, number]]
+  colors: GarmentColor[]
+  sizes: string[]
+  base_price: number
+  category_name: string
+  sort: number
+}
+
+export interface Design extends RecordModel {
+  catalog: string
+  name: string
+  file: string
+  width: number
+  height: number
+}
+
+export interface Product extends RecordModel {
+  catalog: string
+  design: string
+  template: string
+  category: string
+  name: string
+  price: number
+  placement: { x: number; y: number; scale: number; rotation: number }
+  colors: string[]
+  sizes: string[]
+  sort: number
+  expand?: { template?: GarmentTemplate; design?: Design; category?: Category }
+}
+
+export interface ProductRender extends RecordModel {
+  product: string
+  color: string
+  img_480: string
+  img_960: string
+}
+
 export interface Theme extends RecordModel {
   name: string
   slug: string

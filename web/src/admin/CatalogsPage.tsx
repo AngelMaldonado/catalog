@@ -26,6 +26,7 @@ export function CatalogsPage() {
           {data.map((c) => (
             <Fila
               key={c.id}
+              to={`/admin/catalogos/${c.id}`}
               icono={BookOpen}
               titulo={c.name}
               sub={[c.expand?.theme?.name, VUELTA[c.page_turn]].filter(Boolean).join(' · ')}
