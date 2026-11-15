@@ -1,0 +1,11 @@
+# One installation per business. Copy, set the image tag and the domain in your proxy (Coolify).
+services:
+  catalog:
+    image: catalog:dev
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - catalog_data:/pb/pb_data
+volumes:
+  catalog_data:

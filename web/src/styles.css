@@ -1,0 +1,202 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource/bebas-neue';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Shell mobile first, con el patrón de Comandas: tokens estilo shadcn en oklch, base
+ * monocromática, un acento para lo seleccionado y --marca para el color del negocio.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* títulos: un solo peso (400); no le pongas font-semibold */
+  --font-titulo: 'Bebas Neue', 'Inter Variable', ui-sans-serif, sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-exito: var(--exito);
+  --color-exito-foreground: var(--exito-foreground);
+  --color-aviso: var(--aviso);
+  --color-aviso-foreground: var(--aviso-foreground);
+  --color-acento: var(--acento);
+  --color-acento-foreground: var(--acento-foreground);
+  --color-acento-tinte: var(--acento-tinte);
+  --color-acento-texto: var(--acento-texto);
+  --color-marca: var(--marca);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  html {
+    background-color: var(--background);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    @apply font-sans;
+  }
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* evita el zoom de iOS al enfocar */
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-muted/40 text-foreground antialiased dark:bg-background;
+  }
+}
+
+/*
+ * Tema del producto. --marca es el color del negocio (más adelante, configurable en
+ * Ajustes); hoy es un terracota neutro. --exito, --aviso y --destructive son estados.
+ */
+:root {
+  color-scheme: light;
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.708 0 0);
+  --acento: oklch(0.205 0 0);
+  --acento-foreground: oklch(0.985 0 0);
+  --acento-tinte: oklch(0.94 0 0);
+  --acento-texto: oklch(0.145 0 0);
+  --marca: oklch(0.56 0.13 45);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.965 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.965 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.87 0 0);
+  --radius: 0.875rem;
+  --exito: oklch(0.596 0.145 163.225);
+  --exito-foreground: oklch(0.985 0 0);
+  --aviso: oklch(0.769 0.188 70.08);
+  --aviso-foreground: oklch(0.279 0.077 45.635);
+}
+
+.dark {
+  color-scheme: dark;
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --ring: oklch(0.556 0 0);
+  --acento: oklch(0.922 0 0);
+  --acento-foreground: oklch(0.205 0 0);
+  --acento-tinte: oklch(0.32 0 0);
+  --acento-texto: oklch(0.985 0 0);
+  --marca: oklch(0.72 0.12 50);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+}
+
+/*
+ * Transiciones entre pantallas (lib/transicion.ts pone data-transicion en <html>):
+ * más adentro entra desde la derecha, de regreso desde la izquierda, entre pestañas
+ * se funde. Encabezado y menú inferior tienen su propio nombre: no se deslizan.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .vt-contenido {
+    view-transition-name: contenido;
+  }
+  .vt-encabezado {
+    view-transition-name: encabezado;
+  }
+  .vt-menu {
+    view-transition-name: menu;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(contenido),
+  ::view-transition-new(contenido) {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  html[data-transicion='adelante']::view-transition-old(contenido) {
+    animation-name: vt-salir-izquierda;
+  }
+  html[data-transicion='adelante']::view-transition-new(contenido) {
+    animation-name: vt-entrar-derecha;
+  }
+  html[data-transicion='atras']::view-transition-old(contenido) {
+    animation-name: vt-salir-derecha;
+  }
+  html[data-transicion='atras']::view-transition-new(contenido) {
+    animation-name: vt-entrar-izquierda;
+  }
+  ::view-transition-old(menu),
+  ::view-transition-new(menu) {
+    animation: none;
+  }
+}
+@keyframes vt-entrar-derecha {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}
+@keyframes vt-entrar-izquierda {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+@keyframes vt-salir-izquierda {
+  to {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+}
+@keyframes vt-salir-derecha {
+  to {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+}

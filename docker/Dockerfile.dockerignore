@@ -1,0 +1,12 @@
+# Allow-list: only what the image needs leaves the build context.
+**
+!web/package.json
+!web/pnpm-lock.yaml
+!web/index.html
+!web/tsconfig.json
+!web/vite.config.ts
+!web/src/**
+!web/public/**
+!pb/pb_migrations/**
+!pb/pb_hooks/**
+!pb/seed/**

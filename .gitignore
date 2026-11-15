@@ -1,0 +1,17 @@
+# tools and local state
+.bin/
+pb_data/
+.codegraph/
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+web/dist/
+*.log
+
+# spike artefacts
+spikes/*/metrics.jsonl
+spikes/*/public/img/
+spikes/*/public/bg/

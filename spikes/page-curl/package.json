@@ -1,0 +1,17 @@
+{
+  "name": "spike-page-curl",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "images": "node scripts/prepare-images.mjs"
+  },
+  "dependencies": {
+    "gsap": "3.15.1",
+    "page-flip": "2.0.7"
+  },
+  "devDependencies": {
+    "sharp": "0.35.5",
+    "vite": "8.3.8"
+  }
+}
