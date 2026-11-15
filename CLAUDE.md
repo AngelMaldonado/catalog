@@ -8,7 +8,14 @@ Catálogo de temporada «de bolsillo» para negocios chicos de ropa estampada: e
   - `/admin` es el panel del negocio, con login contra la colección `users`.
   - `/` y `/c/:slug` son el visor público.
 - `pb/pb_migrations/`: esquema y datos base como migraciones JS. Nunca edites una migración aplicada; agrega otra.
-- `pb/pb_hooks/`: lógica de servidor en JS (URLs firmadas, contadores).
+- `pb/pb_hooks/`: lógica de servidor en JS.
+  - `visor.pb.js` tiene `/api/visor[/:slug]` (datos públicos con URLs firmadas de 10 min), `/api/r/:id/:tam` (renders), `/api/visor/evento` (contadores), y `/` y `/c/:slug` con las etiquetas OG.
+  - Cada handler corre aislado: el código compartido va en `lib/` y se carga con `require()`.
+- `web/src/visor/`: visor público.
+  - `datos.ts` pinta cada página bajo demanda con `pintarPagina`.
+  - `motores/` tiene la página realista (WebGL), la hoja rígida (CSS 3D) y deslizar, sobre una base común.
+  - `LibroVista` degrada solo: realista → rígida → deslizar.
+  - `Ficha` se carga aparte.
 - `pb/seed/`: archivos que siembran las migraciones. Las prendas tienen foto base, máscara y sombreado; los temas, un fondo por tipo de página. Cada carpeta tiene su `PROVENANCE.md`.
 - `pb/tools/`: pipelines de assets, con su propio `package.json`.
   - `garments.mjs`: máscara, sombreado y áreas de impresión.

@@ -39,6 +39,7 @@
   --color-acento-tinte: var(--acento-tinte);
   --color-acento-texto: var(--acento-texto);
   --color-marca: var(--marca);
+  --color-grafica: var(--grafica);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -89,6 +90,7 @@
   --acento-tinte: oklch(0.94 0 0);
   --acento-texto: oklch(0.145 0 0);
   --marca: oklch(0.56 0.13 45);
+  --grafica: #b0643a; /* serie única de las gráficas, validada contra la superficie clara */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -121,6 +123,7 @@
   --acento-tinte: oklch(0.32 0 0);
   --acento-texto: oklch(0.985 0 0);
   --marca: oklch(0.72 0.12 50);
+  --grafica: #c47a4c; /* validada contra la superficie oscura (banda L 0.48–0.67) */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

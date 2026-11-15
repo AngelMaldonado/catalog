@@ -1,11 +1,15 @@
 import { AtSign, LoaderCircle, MapPin, MessageCircle, Music2, Users } from 'lucide-react'
 import { useNegocio, logoUrl } from '../lib/negocio'
 import { iniciales } from '../lib/utils'
-import { VisorCatalogo } from './CatalogPage'
+import { VisorPage } from '../visor/VisorPage'
 
 // La raíz muestra el catálogo vigente. Sin catálogo vigente publicado: una página simple con el
 // logo y el contacto (decidido en el hilo «Editor de catálogo»).
 export function HomePage() {
+  return <VisorPage sinVigente={<Contacto />} />
+}
+
+function Contacto() {
   const { data: negocio, isPending } = useNegocio()
   if (isPending)
     return (
@@ -13,9 +17,6 @@ export function HomePage() {
         <LoaderCircle className="size-6 animate-spin" />
       </div>
     )
-  const vigente = negocio?.expand?.current_catalog
-  if (vigente && vigente.status === 'published') return <VisorCatalogo catalogo={vigente} />
-
   const logo = logoUrl(negocio)
   const wa = negocio?.whatsapp.replace(/\D/g, '')
   const enlaces = [

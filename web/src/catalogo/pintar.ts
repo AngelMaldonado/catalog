@@ -148,8 +148,11 @@ export function pintarPagina(ctx: CanvasRenderingContext2D, w: number, h: number
   ctx.restore()
 }
 
-function tarjetas(ctx: CanvasRenderingContext2D, w: number, h: number, u: number, productos: ProductoPintable[], c: ContextoPintado) {
-  const n = Math.max(c.porPagina, 1)
+/** Rectángulos de las tarjetas de producto en una página w×h con `porPagina` lugares. Los usa el
+ *  pintor y la capa de toque del visor (para saber qué producto se tocó). */
+export function rectsTarjetas(w: number, h: number, porPagina: number): { x: number; y: number; w: number; h: number }[] {
+  const u = w / 100
+  const n = Math.max(porPagina, 1)
   const cols = n > 2 ? 2 : 1
   const filas = n > 1 ? 2 : 1
   const mx = 7 * u
@@ -158,9 +161,14 @@ function tarjetas(ctx: CanvasRenderingContext2D, w: number, h: number, u: number
   const gap = 4 * u
   const cw = (w - 2 * mx - gap * (cols - 1)) / cols
   const ch = (h - top - bottom - gap * (filas - 1)) / filas
+  return Array.from({ length: n }, (_, k) => ({ x: mx + (k % cols) * (cw + gap), y: top + Math.floor(k / cols) * (ch + gap), w: cw, h: ch }))
+}
+
+function tarjetas(ctx: CanvasRenderingContext2D, w: number, h: number, u: number, productos: ProductoPintable[], c: ContextoPintado) {
+  const n = Math.max(c.porPagina, 1)
+  const rects = rectsTarjetas(w, h, n)
   productos.forEach((p, k) => {
-    const x = mx + (k % cols) * (cw + gap)
-    const y = top + Math.floor(k / cols) * (ch + gap)
+    const { x, y, w: cw, h: ch } = rects[k]
     const pie = (n === 4 ? 13 : 11) * u
     ctx.save()
     ctx.fillStyle = 'rgba(255,255,255,0.78)'

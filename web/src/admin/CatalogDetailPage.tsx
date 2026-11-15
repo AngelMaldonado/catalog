@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router'
-import { ArrowDown, ArrowUp, Eye, GripVertical, ImagePlus, Settings2, Share2, Shirt } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChartColumn, Eye, GripVertical, ImagePlus, Settings2, Share2, Shirt } from 'lucide-react'
 import { toast } from 'sonner'
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
@@ -86,13 +86,16 @@ export function CatalogDetailPage() {
               {c.expand?.theme?.name} · {VUELTA[c.page_turn]} · {c.layout} por página
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-3 grid grid-cols-4 gap-2">
             <ButtonLink to={`/admin/catalogos/${id}/vista`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
               <Eye className="size-5" /> Vista previa
             </ButtonLink>
             <Button variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs" onClick={() => setHoja('compartir')}>
               <Share2 className="size-5" /> Compartir
             </Button>
+            <ButtonLink to={`/admin/catalogos/${id}/numeros`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
+              <ChartColumn className="size-5" /> Números
+            </ButtonLink>
             <Button variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs" onClick={() => setHoja('ajustes')}>
               <Settings2 className="size-5" /> Ajustes
             </Button>
