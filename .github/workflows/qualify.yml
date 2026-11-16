@@ -1,0 +1,72 @@
+name: Qualify
+
+# Secretos, tipos, pruebas y build de la SPA, y las pruebas de la calculadora de
+# versión; en los PR, además, que los commits sigan Conventional Commits (de ellos
+# sale la versión). Reutilizable: lo llaman los PR, los push a main y release.yml
+# (una calificación que existe dos veces diverge en un mes).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # Falla si hay un secreto (token, llave) en el código. Antes de instalar
+      # dependencias para no escanear node_modules. Fijado al commit de v0.36.0, no
+      # al tag: los tags de este action ya fueron secuestrados una vez.
+      - name: Secretos
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.3
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Versión
+        run: node --test scripts/release/version.test.mjs
+
+      - name: SPA
+        working-directory: web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm run build
+
+  commits:
+    # sólo en PR: lo que llega a main ya pasó por aquí o lo empujó el dueño
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Conventional Commits
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: scripts/conventional.sh --range "$BASE..$HEAD"

@@ -1,0 +1,63 @@
+# Catálogo en producción: una VPS, un dominio (octopusslp.online).
+#
+# infra/ (Ansible) copia este archivo a /opt/catalog/compose.yaml y escribe en
+# /opt/catalog/.env CATALOG_DOMAIN; `just release deploy vX.Y.Z` escribe ahí
+# CATALOG_TAG y levanta el stack. Este archivo es la copia revisable: se edita
+# aquí y se vuelve a converger (`just infra platform`).
+#
+#   Internet ─ 80/443 ─▶ caddy (HTTPS automático) ─▶ catalog:8090 (PocketBase + SPA)
+#
+# Sólo Caddy publica puertos (UFW ya los permite: Docker se salta UFW con los
+# puertos publicados, así que nada más debe publicar uno).
+name: catalog
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  catalog:
+    image: ghcr.io/angelmaldonado/catalog:${CATALOG_TAG:?Set CATALOG_TAG}
+    pull_policy: missing
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_ENV: production
+    expose:
+      - '8090'
+    volumes:
+      # base SQLite, archivos subidos y la llave que firma las URLs del visor
+      - catalog-data:/pb/pb_data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging: *logging
+
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    depends_on:
+      catalog:
+        condition: service_healthy
+    environment:
+      CATALOG_DOMAIN: ${CATALOG_DOMAIN:?Set CATALOG_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *logging
+
+volumes:
+  catalog-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Instalado por `just hooks` (git config core.hooksPath .githooks).
+asunto=$(grep -v '^#' "$1" | head -n 1)
+exec "$(git rev-parse --show-toplevel)/scripts/conventional.sh" "$asunto"

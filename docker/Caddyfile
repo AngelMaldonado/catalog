@@ -1,0 +1,8 @@
+# Un solo dominio, con HTTPS automático (Let's Encrypt) en cuanto el registro A
+# apunta a la VPS. Caddy pone X-Forwarded-For con la IP del visitante (descarta
+# la que mande el cliente); PocketBase confía en ese encabezado para los límites
+# de peticiones (pb_migrations/1794768700_trusted_proxy.js).
+{$CATALOG_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy catalog:8090
+}
