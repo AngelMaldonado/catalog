@@ -29,7 +29,6 @@ Una VPS con Docker y Caddy en `octopusslp.online` (provisión en [`infra/`](infr
 
 ```sh
 just infra provision           # una vez: usuario, SSH, UFW, Fail2ban, Docker y /opt/catalog
-just release login             # una vez: el servidor puede bajar la imagen privada de GHCR
 just release next              # qué versión saldría (Conventional Commits desde el último tag)
 just release tag               # crea y empuja vX.Y.Z de main → GitHub Actions publica la imagen
 just release deploy vX.Y.Z     # el servidor corre esa imagen
@@ -37,6 +36,6 @@ just release verify <sha>      # espera a que https://octopusslp.online sirva es
 just prod logs                 # logs del stack, en la sesión tmux ayetec-catalog-prod
 ```
 
-La imagen (`ghcr.io/angelmaldonado/catalog`) sirve todo en el puerto 8090, guarda los datos en el volumen `/pb/pb_data` y responde `/api/meta` (versión y commit) y `/api/health`. `just docker build` la construye localmente en reko-3 para probarla.
+La imagen (`ghcr.io/angelmaldonado/catalog`, pública) sirve todo en el puerto 8090, guarda los datos en el volumen `/pb/pb_data` y responde `/api/meta` (versión y commit) y `/api/health`. `just docker build` la construye localmente en reko-3 para probarla.
 
 El primer superusuario: `just prod logs` muestra el enlace `…/_/#/pbinstall/<token>` que PocketBase imprime mientras no hay ninguno; ábrelo cambiando el host por `https://octopusslp.online`.

@@ -148,7 +148,7 @@ release verb *args:
           docker compose pull catalog
           docker compose up -d --remove-orphans
           docker compose ps"
-        echo "Luego: just release verify \$(git rev-list -n 1 $tag)" ;;
+        echo "Luego: just release verify $(git rev-list -n 1 "$tag")" ;;
       verify)
         sha=${1:?uso: just release verify <sha>}
         command -v jq >/dev/null || { echo "falta jq" >&2; exit 1; }
