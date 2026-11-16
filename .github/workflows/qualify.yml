@@ -5,9 +5,8 @@ name: Qualify
 # sale la versión). Reutilizable: lo llaman los PR, los push a main y release.yml
 # (una calificación que existe dos veces diverge en un mes).
 #
-# Corre en el runner propio (etiqueta `catalog`, en reko-3): el repo es privado y los
-# runners de GitHub cobran minutos. Nada usa el cache de Actions (su almacenamiento
-# también se cobra): el runner trae su propio Docker y descarga Node y pnpm.
+# Runners de GitHub: el repo es público. NO usar runners propios aquí: un PR desde un
+# fork ejecutaría su código en esa máquina. Nada usa el cache de Actions.
 
 on:
   pull_request:
@@ -20,7 +19,7 @@ permissions:
 
 jobs:
   qualify:
-    runs-on: [self-hosted, catalog]
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -61,7 +60,7 @@ jobs:
   commits:
     # sólo en PR: lo que llega a main ya pasó por aquí o lo empujó el dueño
     if: github.event_name == 'pull_request'
-    runs-on: [self-hosted, catalog]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
