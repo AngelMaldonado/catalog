@@ -5,21 +5,28 @@ name: Qualify
 # sale la versión). Reutilizable: lo llaman los PR, los push a main y release.yml
 # (una calificación que existe dos veces diverge en un mes).
 #
-# Runners de GitHub: el repo es público. NO usar runners propios aquí: un PR desde un
-# fork ejecutaría su código en esa máquina. Nada usa el cache de Actions.
+# En PR y push a main corre en runners de GitHub: el repo es público y un PR desde un
+# fork NUNCA debe llegar a un runner propio (ejecutaría su código en esa máquina).
+# Sólo release.yml, que dispara un tag (sólo quien tiene escritura los empuja), lo
+# llama con `runner` = el runner propio de reko-3. Nada usa el cache de Actions.
 
 on:
   pull_request:
   push:
     branches: [main]
   workflow_call:
+    inputs:
+      runner:
+        description: runs-on en JSON, p. ej. '["self-hosted","catalog"]'
+        type: string
+        default: '"ubuntu-latest"'
 
 permissions:
   contents: read
 
 jobs:
   qualify:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(inputs.runner || '"ubuntu-latest"') }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5

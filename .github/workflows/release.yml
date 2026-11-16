@@ -6,8 +6,9 @@ name: Release
 #   tag → qualify → imagen ghcr.io/angelmaldonado/catalog:vX.Y.Z · :<sha>
 #       → release en GitHub con el manifiesto (imagen por digest)
 #
-# Runners de GitHub (repo público; nunca un runner propio: ver qualify.yml), sin el
-# cache de Actions. No despliega: ningún secreto del servidor vive aquí. Después:
+# Corre en el runner propio (etiqueta `catalog`, reko-3, Docker por dind): sólo un tag
+# lo dispara, y sólo quien tiene escritura en el repo empuja tags (ver qualify.yml).
+# Sin el cache de Actions. No despliega: ningún secreto del servidor vive aquí. Después:
 #   just release deploy vX.Y.Z
 #   just release verify <sha>
 
@@ -29,10 +30,12 @@ env:
 jobs:
   qualify:
     uses: ./.github/workflows/qualify.yml
+    with:
+      runner: '["self-hosted","catalog"]'
 
   publish:
     needs: qualify
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, catalog]
     timeout-minutes: 30
     permissions:
       contents: write
@@ -56,9 +59,12 @@ jobs:
             echo "published_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           } >> "$GITHUB_OUTPUT"
 
+      # el runner no trae el plugin buildx (sin él no hay TARGETARCH en el Dockerfile);
+      # driver docker: construye en el dind del runner y reutiliza su cache de capas
       - uses: docker/setup-buildx-action@v3
         with:
           version: v0.38.1
+          driver: docker
 
       - uses: docker/login-action@v3
         with:
