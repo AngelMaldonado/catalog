@@ -37,5 +37,117 @@
       "title": "Georgia, serif",
       "body": "system-ui, sans-serif"
     }
+  },
+  "sanvalentin": {
+    "name": "Día del Amor y la Amistad",
+    "season": "Febrero",
+    "palette": {
+      "background": "#fbeef0",
+      "ink": "#4a1424",
+      "accent": "#d3264f"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "pacifico"
+    }
+  },
+  "mujer": {
+    "name": "8M · Día de la Mujer",
+    "season": "Marzo",
+    "palette": {
+      "background": "#f3eef7",
+      "ink": "#2e1640",
+      "accent": "#7b2d9b"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "abril"
+    }
+  },
+  "ninos": {
+    "name": "Día del Niño",
+    "season": "Abril",
+    "palette": {
+      "background": "#fff7e6",
+      "ink": "#1f2a44",
+      "accent": "#ff6b35"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "bangers"
+    }
+  },
+  "madres": {
+    "name": "Día de las Madres",
+    "season": "Mayo",
+    "palette": {
+      "background": "#fdf1f3",
+      "ink": "#4b2236",
+      "accent": "#c2577a"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "lobster"
+    }
+  },
+  "padre": {
+    "name": "Día del Padre",
+    "season": "Junio",
+    "palette": {
+      "background": "#d9b98a",
+      "ink": "#1c2a3a",
+      "accent": "#2f5d8a"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "abril"
+    }
+  },
+  "patrias": {
+    "name": "Fiestas Patrias",
+    "season": "Septiembre",
+    "palette": {
+      "background": "#f7f4ec",
+      "ink": "#1f2a20",
+      "accent": "#c8102e"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "shrikhand"
+    }
+  },
+  "halloween": {
+    "name": "Halloween",
+    "season": "Octubre",
+    "palette": {
+      "background": "#1a1222",
+      "ink": "#fff3e6",
+      "accent": "#ff7a00"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "creepster"
+    }
+  },
+  "buenfin": {
+    "name": "El Buen Fin",
+    "season": "Noviembre",
+    "palette": {
+      "background": "#fff4e0",
+      "ink": "#1f1b16",
+      "accent": "#e63312"
+    },
+    "fonts": {
+      "title": "Georgia, serif",
+      "body": "system-ui, sans-serif",
+      "fuente": "bungee"
+    }
   }
 }

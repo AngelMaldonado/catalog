@@ -65,6 +65,64 @@ export const THEMES = {
     fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif' },
     motif: 'Mexican Día de Muertos, festive and respectful (never scary or gory): cempasúchil marigold flowers in bright orange, papel picado banners in magenta, purple and orange, candles with warm glow, decorated sugar skulls with flowers, pan de muerto; deep night-blue and purple base with vibrant accents.',
   },
+  // Efemérides comunes en México. `fonts.fuente`: fuente del título por defecto (id de
+  // web/src/lib/fuentes.ts) para los catálogos de ese tema que no elijan otra.
+  sanvalentin: {
+    name: 'Día del Amor y la Amistad',
+    season: 'Febrero',
+    palette: { background: '#fbeef0', ink: '#4a1424', accent: '#d3264f' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'pacifico' },
+    motif: "Mexican Día del Amor y la Amistad (Valentine's Day, February 14): romantic and joyful; red and pink hearts, roses, peonies and tulips, blank love-letter envelopes, satin ribbons, soft confetti; blush pink and deep red on a cream base; sweet but elegant, not childish.",
+  },
+  mujer: {
+    name: '8M · Día de la Mujer',
+    season: 'Marzo',
+    palette: { background: '#f3eef7', ink: '#2e1640', accent: '#7b2d9b' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'abril' },
+    motif: "International Women's Day (8M) in Mexico: empowering, artistic and respectful, with no slogans, signs or symbols; purple and green as the main colors (the colors associated with 8M in Mexico), violet, lavender and sage; jacaranda blossoms, violets, eucalyptus and wild botanicals, abstract organic shapes and soft painterly brushstrokes; elegant and strong.",
+  },
+  ninos: {
+    name: 'Día del Niño',
+    season: 'Abril',
+    palette: { background: '#fff7e6', ink: '#1f2a44', accent: '#ff6b35' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'bangers' },
+    motif: 'Mexican Día del Niño (April 30): playful and colorful; traditional Mexican toys (balero, trompo, papalotes kites, canicas marbles, lotería-style shapes without text), balloons, paper planes and confetti; bright primary and candy colors on a light warm base; fun and clean, not cluttered.',
+  },
+  madres: {
+    name: 'Día de las Madres',
+    season: 'Mayo',
+    palette: { background: '#fdf1f3', ink: '#4b2236', accent: '#c2577a' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'lobster' },
+    motif: 'Mexican Día de las Madres (May 10): tender and elegant; soft pink, coral and cream; roses, carnations and peonies, delicate silk ribbons, watercolor textures, small gift boxes; warm, loving and refined.',
+  },
+  padre: {
+    name: 'Día del Padre',
+    season: 'Junio',
+    palette: { background: '#d9b98a', ink: '#1c2a3a', accent: '#2f5d8a' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'abril' },
+    motif: "Father's Day in Mexico (third Sunday of June): classic warm style; navy blue, cognac leather, kraft paper and denim textures, subtle plaid, neckties, vintage pocket watch, coffee and workshop details; refined and simple.",
+  },
+  patrias: {
+    name: 'Fiestas Patrias',
+    season: 'Septiembre',
+    palette: { background: '#f7f4ec', ink: '#1f2a20', accent: '#c8102e' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'shrikhand' },
+    motif: 'Mexican Fiestas Patrias in September: festive and proud in green, white and red, WITHOUT the national flag, coat of arms or eagle (they cannot be used commercially); tricolor papel picado banners, red and green chiles, corn husks, maguey and nopal plants, talavera tile patterns, tricolor confetti; vibrant but elegant.',
+  },
+  halloween: {
+    name: 'Halloween',
+    season: 'Octubre',
+    palette: { background: '#1a1222', ink: '#fff3e6', accent: '#ff7a00' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'creepster' },
+    motif: "Halloween (October 31), spooky-cute and stylish, never gory or truly scary, and clearly different from Día de Muertos (no sugar skulls, no marigolds, no papel picado): carved jack-o'-lanterns with warm glow, bats, full moon, spider webs, wrapped candy, black cats, witch hats; deep purple-black night base with vibrant orange and lime accents.",
+  },
+  buenfin: {
+    name: 'El Buen Fin',
+    season: 'Noviembre',
+    palette: { background: '#fff4e0', ink: '#1f1b16', accent: '#e63312' },
+    fonts: { title: 'Georgia, serif', body: 'system-ui, sans-serif', fuente: 'bungee' },
+    motif: 'Big seasonal sale (El Buen Fin, Mexico, November): energetic modern retail look; bold red, warm yellow and white; shopping bags, gift boxes, blank price-tag shapes (no numbers), dynamic bursts and confetti; clean and graphic.',
+  },
 }
 
 function loadKey() {
