@@ -45,3 +45,9 @@ export async function imagenOg({ contexto: c }: Libro): Promise<Blob> {
   ctx.fillText(c.catalogo, W / 2, H * 0.58, W * 0.86)
   return new Promise((ok, mal) => lienzo.toBlob((b) => (b ? ok(b) : mal(new Error('og'))), 'image/jpeg', 0.85))
 }
+
+/** Título y descripción que el servidor pone en las etiquetas Open Graph: deben coincidir con
+ *  `indexConMeta` en pb/pb_hooks/lib/visor.js (los previews de «Compartir» los muestran). */
+export function textosOg(catalogo: string, negocio: string) {
+  return { titulo: `${catalogo} · ${negocio}`, descripcion: `Catálogo de ${negocio}. Hojéalo y pide por WhatsApp.` }
+}

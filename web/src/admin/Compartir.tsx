@@ -5,9 +5,10 @@ import type { Catalog } from '../lib/types'
 import { useNegocio } from '../lib/negocio'
 import { Hoja } from '../components/shell/Hoja'
 import { Button } from '../components/ui/button'
+import { PreviewRedes } from './PreviewRedes'
 
-// Compartir un catálogo publicado: enlace, QR (para imprimir o mandar por WhatsApp) y el menú
-// de compartir del teléfono.
+// Compartir un catálogo publicado: enlace, QR (para imprimir o mandar por WhatsApp), el menú
+// de compartir del teléfono y cómo se ve el enlace en Facebook e Instagram.
 export function Compartir({ catalogo, abierta, onClose }: { catalogo: Catalog; abierta: boolean; onClose: () => void }) {
   const { data: negocio } = useNegocio()
   const [qr, setQr] = useState('')
@@ -53,6 +54,7 @@ export function Compartir({ catalogo, abierta, onClose }: { catalogo: Catalog; a
               <Share2 /> Enviar
             </Button>
           </div>
+          <PreviewRedes catalogo={catalogo} />
         </div>
       ) : null}
     </Hoja>
