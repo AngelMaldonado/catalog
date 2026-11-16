@@ -5,7 +5,9 @@ import { useQuery } from '@tanstack/react-query'
 import { pb } from '../lib/pb'
 import { FONDOS, type Catalog, type Category, type FondoPagina, type GarmentTemplate, type Product, type ProductRender, type Settings, type SpecialPage } from '../lib/types'
 import { maquetar, type Modo } from './maquetar'
-import type { ContextoPintado, EspecialPintable, PaginaPintable, ProductoPintable } from './pintar'
+import { INTER, type ContextoPintado, type EspecialPintable, type PaginaPintable, type ProductoPintable } from './pintar'
+import { renderPrincipal } from '../lib/mockup/productos'
+import { cargarFuente } from '../lib/fuentes'
 
 const bitmaps = new Map<string, Promise<ImageBitmap | undefined>>()
 /** Decodifica una vez por archivo (la clave no incluye el token, que cambia). */
@@ -28,6 +30,8 @@ export interface Libro {
   catalogo: Catalog
   paginas: PaginaPintable[]
   contexto: ContextoPintado
+  /** render 960 de un producto (para destacarlo en la portada o en la imagen para redes) */
+  grandeDe: (productoId: string) => Promise<ImageBitmap | undefined>
 }
 
 export async function cargarLibro(catalogId: string, modo: Modo): Promise<Libro> {
@@ -42,6 +46,16 @@ export async function cargarLibro(catalogId: string, modo: Modo): Promise<Libro>
   ])
   const tema = catalogo.expand?.theme
   const grande = catalogo.layout === '1'
+  // la fuente elegida para el catálogo aplica a todo su texto (sin elegir: la del tema e Inter)
+  const familia = await cargarFuente(catalogo.title_font)
+  // sin fuente propia, el título usa la del tema (si trae una); los textos se quedan en Inter
+  const familiaTema = familia ? undefined : await cargarFuente(catalogo.expand?.theme?.fonts?.fuente)
+  /** Render 960 del producto (primer color y variante): portada y imagen para redes. */
+  const grandeDe = async (pid: string) => {
+    const p = productos.find((x) => x.id === pid)
+    const r = p && renderPrincipal(renders, p)
+    return r ? archivo(r, r.img_960, token) : undefined
+  }
 
   const fondos: Partial<Record<FondoPagina, ImageBitmap>> = {}
   await Promise.all(
@@ -53,7 +67,7 @@ export async function cargarLibro(catalogId: string, modo: Modo): Promise<Libro>
   const pintables: ProductoPintable[] = await Promise.all(
     productos.map(async (p) => {
       const t = p.expand?.template as GarmentTemplate | undefined
-      const r = renders.find((x) => x.product === p.id && x.color === p.colors[0]) ?? renders.find((x) => x.product === p.id)
+      const r = renderPrincipal(renders, p)
       return {
         id: p.id,
         category: p.category,
@@ -86,9 +100,21 @@ export async function cargarLibro(catalogId: string, modo: Modo): Promise<Libro>
       moneda: negocio.currency,
       porPagina: Number(catalogo.layout),
       paleta: tema?.palette ?? { background: '#f4efe6', ink: '#2a2118', accent: '#b0643a' },
-      fuenteTitulo: tema?.fonts?.title ?? 'Georgia, serif',
+      fuenteTitulo: familia ?? familiaTema ?? tema?.fonts?.title ?? 'Georgia, serif',
+      fuenteTexto: familia ?? INTER,
       fondos,
+      realce: catalogo.product_highlight || 'brillo',
+      portada: catalogo.cover_layout
+        ? {
+            diseno: catalogo.cover_layout,
+            productos: await Promise.all(catalogo.cover_layout.productos.map((pid) => grandeDe(pid))),
+          }
+        : undefined,
+      contraportada: catalogo.back_layout
+        ? { diseno: catalogo.back_layout, productos: await Promise.all(catalogo.back_layout.productos.map((pid) => grandeDe(pid))) }
+        : undefined,
     },
+    grandeDe,
   }
 }
 

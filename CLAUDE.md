@@ -17,6 +17,9 @@ Catálogo de temporada «de bolsillo» para negocios chicos de ropa estampada: e
   - `motores/` tiene la página realista (WebGL), la hoja rígida (CSS 3D) y deslizar, sobre una base común.
   - `LibroVista` degrada solo: realista → rígida → deslizar.
   - `Ficha` se carga aparte.
+- `web/src/catalogo/lienzo.ts`: elementos movibles (portada, contraportada, imagen para redes y sus plantillas); `og.ts` arma la imagen para redes. `web/src/lib/fuentes.ts`: fuentes del catálogo, cargadas bajo demanda.
+- `web/src/admin/colocacion/`: vista previa arrastrable, controles y cajón que comparten el editor de producto, el ajuste en lote y las portadas.
+- Variantes de prenda (sudadera con/sin gorro): `garment_templates.variant_of`, `products.variants`, un render por variante y color (`lib/mockup/productos.ts`).
 - `pb/seed/`: archivos que siembran las migraciones. Las prendas tienen foto base, máscara y sombreado; los temas, un fondo por tipo de página. Cada carpeta tiene su `PROVENANCE.md`.
 - `pb/tools/`: pipelines de assets, con su propio `package.json`.
   - `garments.mjs`: máscara, sombreado y áreas de impresión.

@@ -8,6 +8,7 @@ import { FuentePaginas, pedirVisor, type ProductoVisor, type RespuestaVisor } fr
 import { LibroVista, type ModoVuelta } from './LibroVista'
 import type { Vista } from './motores/base'
 import { registrar } from './eventos'
+import { cargarFuente } from '../lib/fuentes'
 
 const Ficha = lazy(() => import('./Ficha'))
 
@@ -34,6 +35,12 @@ export function VisorPage({ slug, sinVigente }: { slug?: string; sinVigente?: Re
   const [lento, setLento] = useState(() => sessionStorage.getItem('visor-lento') === '1')
   const [vista, setVista] = useState<Vista>({ izq: null, der: 0 })
   const [ficha, setFicha] = useState<ProductoVisor | null>(null)
+  // la fuente del catálogo (si eligió una): el visor ya la carga para pintar; la ficha la usa en el nombre
+  const [familia, setFamilia] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    const id = datos.data?.catalogo.fuente || datos.data?.tema.fonts?.fuente
+    if (id) cargarFuente(id).then(setFamilia)
+  }, [datos.data?.catalogo.fuente, datos.data?.tema.fonts?.fuente])
   const medir = new URLSearchParams(location.search).has('medir')
   const [medidas, setMedidas] = useState<number[]>([])
 
@@ -113,7 +120,7 @@ export function VisorPage({ slug, sinVigente }: { slug?: string; sinVigente?: Re
         ))}
       </nav>
       <Suspense fallback={null}>
-        {ficha && <Ficha fuente={fuente} producto={ficha} whatsapp={d.negocio.whatsapp} moneda={d.negocio.moneda} slug={slug} onClose={() => setFicha(null)} />}
+        {ficha && <Ficha fuenteTitulo={familia} fuente={fuente} producto={ficha} whatsapp={d.negocio.whatsapp} moneda={d.negocio.moneda} slug={slug} onClose={() => setFicha(null)} />}
       </Suspense>
     </VisorShell>
   )

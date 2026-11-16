@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useLocation, useParams } from 'react-router'
-import { ArrowDown, ArrowUp, ChartColumn, Eye, GripVertical, ImagePlus, Settings2, Share2, Shirt } from 'lucide-react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
+import { ArrowDown, ArrowUp, BookImage, ChartColumn, Check, Eye, GripVertical, ImagePlus, Megaphone, Settings2, Share2, Shirt, SlidersHorizontal, SquareCheckBig, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { pb } from '../lib/pb'
-import type { Catalog, Product, ProductRender } from '../lib/types'
-import { dinero, useCategorias, useTokenArchivos } from '../lib/datos'
+import type { Catalog } from '../lib/types'
+import { dinero, useCategorias, useProductosCatalogo, useTokenArchivos, type ItemProducto as Item } from '../lib/datos'
 import { useNegocio } from '../lib/negocio'
 import { marcarDireccion } from '../lib/transicion'
 import { secciones } from '../catalogo/maquetar'
@@ -17,30 +17,30 @@ import { Encabezado } from '../components/shell/Encabezado'
 import { Estado } from '../components/shell/Estado'
 import { Vacio } from '../components/shell/Lista'
 import { Button, ButtonLink } from '../components/ui/button'
+import { cn } from '../lib/utils'
 import { NuevosProductos } from './NuevosProductos'
 import { CatalogoForm } from './CatalogoForm'
 import { Compartir } from './Compartir'
 
-type Item = { producto: Product; render?: ProductRender }
 const VUELTA = { rigid: 'Hoja rígida', realistic: 'Página realista' } as const
 
 export function CatalogDetailPage() {
   const { id = '' } = useParams()
   const qc = useQueryClient()
   const [hoja, setHoja] = useState<'productos' | 'ajustes' | 'compartir' | null>(null)
+  // modo selección (ajuste en lote): null = apagado
+  const [seleccion, setSeleccion] = useState<Set<string> | null>(null)
+  const navigate = useNavigate()
+  const alternar = (ids: string[], marcar: boolean) =>
+    setSeleccion((sel) => {
+      const n = new Set(sel)
+      for (const pid of ids) (marcar ? n.add(pid) : n.delete(pid))
+      return n
+    })
   const { data: negocio } = useNegocio()
   const { data: categorias = [] } = useCategorias()
   const catalogo = useQuery({ queryKey: ['catalog', id], queryFn: () => pb.collection('catalogs').getOne<Catalog>(id, { expand: 'theme' }) })
-  const productos = useQuery({
-    queryKey: ['products', id],
-    queryFn: async (): Promise<Item[]> => {
-      const [ps, rs] = await Promise.all([
-        pb.collection('products').getFullList<Product>({ filter: pb.filter('catalog = {:c}', { c: id }), sort: 'sort' }),
-        pb.collection('product_renders').getFullList<ProductRender>({ filter: pb.filter('product.catalog = {:c}', { c: id }) }),
-      ])
-      return ps.map((p) => ({ producto: p, render: rs.find((r) => r.product === p.id && r.color === p.colors[0]) ?? rs.find((r) => r.product === p.id) }))
-    },
-  })
+  const productos = useProductosCatalogo(id)
   const grupos = useMemo(() => {
     const items = productos.data ?? []
     const porId = new Map(items.map((it) => [it.producto.id, it]))
@@ -76,7 +76,22 @@ export function CatalogDetailPage() {
   const c = catalogo.data
   const vigente = !!c && negocio?.current_catalog === c.id
   return (
-    <Pantalla encabezado={<Encabezado titulo={c?.name ?? 'Catálogo'} atras="/admin" />}>
+    <Pantalla
+      encabezado={<Encabezado titulo={c?.name ?? 'Catálogo'} atras="/admin" />}
+      abajo={
+        seleccion && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="lg" onClick={() => setSeleccion(null)}>
+              <X /> Cancelar
+            </Button>
+            <Button size="lg" className="min-w-0 flex-1" disabled={!seleccion.size}
+              onClick={() => navigate(`/admin/catalogos/${id}/ajustar?p=${[...seleccion].join(',')}`, { viewTransition: true })}>
+              <SlidersHorizontal /> {seleccion.size ? `Ajustar ${seleccion.size}` : 'Elige productos'}
+            </Button>
+          </div>
+        )
+      }
+    >
       {c && (
         <section className="mx-3 mt-3 rounded-3xl border bg-card p-4 shadow-sm sm:mx-auto sm:w-full sm:max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
@@ -86,9 +101,15 @@ export function CatalogDetailPage() {
               {c.expand?.theme?.name} · {VUELTA[c.page_turn]} · {c.layout} por página
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             <ButtonLink to={`/admin/catalogos/${id}/vista`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
               <Eye className="size-5" /> Vista previa
+            </ButtonLink>
+            <ButtonLink to={`/admin/catalogos/${id}/portada`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
+              <BookImage className="size-5" /> Portadas
+            </ButtonLink>
+            <ButtonLink to={`/admin/catalogos/${id}/redes`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
+              <Megaphone className="size-5" /> Imagen redes
             </ButtonLink>
             <Button variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs" onClick={() => setHoja('compartir')}>
               <Share2 className="size-5" /> Compartir
@@ -113,6 +134,16 @@ export function CatalogDetailPage() {
       )}
       {!!productos.data?.length && (
         <div className="mx-3 mt-4 mb-6 space-y-5 sm:mx-auto sm:w-full sm:max-w-3xl">
+          <div className="flex items-center justify-between px-1">
+            <p className="text-sm text-muted-foreground">
+              {seleccion ? `${seleccion.size} seleccionados: toca productos o «Toda la categoría»` : `${productos.data.length} productos`}
+            </p>
+            {!seleccion && (
+              <Button variant="ghost" size="sm" onClick={() => setSeleccion(new Set())}>
+                <SquareCheckBig /> Seleccionar
+              </Button>
+            )}
+          </div>
           {grupos.map((g, i) => (
             <Seccion
               key={g.seccion.id || 'otros'}
@@ -124,6 +155,8 @@ export function CatalogDetailPage() {
               puedeBajar={!!g.seccion.id && i < grupos.filter((x) => x.seccion.id).length - 1}
               onMover={(d) => moverSeccion(i, d)}
               onReordenar={(a, b) => reordenar(g.seccion.id, a, b)}
+              seleccion={seleccion}
+              onAlternar={alternar}
             />
           ))}
           <Button variant="outline" className="w-full" onClick={() => setHoja('productos')}>
@@ -138,10 +171,13 @@ export function CatalogDetailPage() {
   )
 }
 
-function Seccion({ titulo, items, catalogo, moneda, puedeSubir, puedeBajar, onMover, onReordenar }: {
+function Seccion({ titulo, items, catalogo, moneda, puedeSubir, puedeBajar, onMover, onReordenar, seleccion, onAlternar }: {
   titulo: string; items: Item[]; catalogo: string; moneda?: string; puedeSubir: boolean; puedeBajar: boolean
   onMover: (d: -1 | 1) => void; onReordenar: (activo: string, sobre: string) => void
+  seleccion: Set<string> | null; onAlternar: (ids: string[], marcar: boolean) => void
 }) {
+  const ids = items.map((it) => it.producto.id)
+  const todos = !!seleccion && ids.every((pid) => seleccion.has(pid))
   const sensores = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
@@ -154,7 +190,12 @@ function Seccion({ titulo, items, catalogo, moneda, puedeSubir, puedeBajar, onMo
     <section>
       <div className="mb-2 flex items-center gap-1 px-1">
         <h2 className="mr-auto font-titulo text-2xl tracking-wide">{titulo}</h2>
-        {(puedeSubir || puedeBajar) && (
+        {seleccion && (
+          <Button variant={todos ? 'secondary' : 'outline'} size="sm" onClick={() => onAlternar(ids, !todos)}>
+            {todos ? <Check /> : <SquareCheckBig />} {todos ? 'Quitar todos' : 'Toda la categoría'}
+          </Button>
+        )}
+        {!seleccion && (puedeSubir || puedeBajar) && (
           <>
             <Button variant="ghost" size="icon-sm" aria-label={`Subir sección ${titulo}`} disabled={!puedeSubir} onClick={() => onMover(-1)}>
               <ArrowUp />
@@ -169,7 +210,9 @@ function Seccion({ titulo, items, catalogo, moneda, puedeSubir, puedeBajar, onMo
         <SortableContext items={items.map((it) => it.producto.id)} strategy={rectSortingStrategy}>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {items.map((it) => (
-              <Tarjeta key={it.producto.id} item={it} catalogo={catalogo} moneda={moneda} />
+              <Tarjeta key={it.producto.id} item={it} catalogo={catalogo} moneda={moneda}
+                seleccionada={seleccion ? seleccion.has(it.producto.id) : undefined}
+                onAlternar={(marcar) => onAlternar([it.producto.id], marcar)} />
             ))}
           </ul>
         </SortableContext>
@@ -178,28 +221,49 @@ function Seccion({ titulo, items, catalogo, moneda, puedeSubir, puedeBajar, onMo
   )
 }
 
-function Tarjeta({ item: { producto, render }, catalogo, moneda }: { item: Item; catalogo: string; moneda?: string }) {
+function Tarjeta({ item: { producto, render }, catalogo, moneda, seleccionada, onAlternar }: {
+  item: Item; catalogo: string; moneda?: string
+  /** undefined: fuera del modo selección */
+  seleccionada?: boolean; onAlternar: (marcar: boolean) => void
+}) {
   const { pathname } = useLocation()
   const { data: token } = useTokenArchivos()
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: producto.id })
   const to = `/admin/catalogos/${catalogo}/productos/${producto.id}`
+  const cuerpo = (
+    <>
+      <div className="aspect-square bg-muted/60">
+        {render && token && <img src={pb.files.getURL(render, render.img_480, { token })} alt="" className="size-full object-contain" loading="lazy" draggable={false} />}
+      </div>
+      <div className="p-3">
+        <p className="truncate text-sm font-semibold">{producto.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {dinero(producto.price, moneda)} · {producto.colors.length} {producto.colors.length === 1 ? 'color' : 'colores'}
+        </p>
+      </div>
+    </>
+  )
   return (
     <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={isDragging ? 'relative z-10 opacity-80' : 'relative'}>
-      <Link to={to} viewTransition onClick={() => marcarDireccion(pathname, to)} className="block overflow-hidden rounded-3xl border bg-card shadow-sm active:bg-muted">
-        <div className="aspect-square bg-muted/60">
-          {render && token && <img src={pb.files.getURL(render, render.img_480, { token })} alt="" className="size-full object-contain" loading="lazy" draggable={false} />}
-        </div>
-        <div className="p-3">
-          <p className="truncate text-sm font-semibold">{producto.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {dinero(producto.price, moneda)} · {producto.colors.length} {producto.colors.length === 1 ? 'color' : 'colores'}
-          </p>
-        </div>
-      </Link>
-      <button ref={setActivatorNodeRef} {...attributes} {...listeners} type="button" aria-label={`Mover ${producto.name}`}
-        className="absolute top-2 left-2 touch-none rounded-full bg-background/90 p-1.5 text-muted-foreground shadow-sm">
-        <GripVertical className="size-4" />
-      </button>
+      {seleccionada === undefined ? (
+        <Link to={to} viewTransition onClick={() => marcarDireccion(pathname, to)} className="block overflow-hidden rounded-3xl border bg-card shadow-sm active:bg-muted">
+          {cuerpo}
+        </Link>
+      ) : (
+        <button type="button" aria-pressed={seleccionada} onClick={() => onAlternar(!seleccionada)}
+          className={cn('block w-full overflow-hidden rounded-3xl border bg-card text-left shadow-sm transition-colors', seleccionada && 'border-acento ring-2 ring-acento')}>
+          {cuerpo}
+          <span aria-hidden className={cn('absolute top-2 right-2 flex size-6 items-center justify-center rounded-full border-2 bg-background/90', seleccionada ? 'border-acento' : 'border-muted-foreground/50')}>
+            {seleccionada && <span className="size-3 rounded-full bg-acento" />}
+          </span>
+        </button>
+      )}
+      {seleccionada === undefined && (
+        <button ref={setActivatorNodeRef} {...attributes} {...listeners} type="button" aria-label={`Mover ${producto.name}`}
+          className="absolute top-2 left-2 touch-none rounded-full bg-background/90 p-1.5 text-muted-foreground shadow-sm">
+          <GripVertical className="size-4" />
+        </button>
+      )}
     </li>
   )
 }

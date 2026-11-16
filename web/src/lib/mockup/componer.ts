@@ -1,21 +1,30 @@
 // Compositor de mockups, puro (sin DOM): trabaja sobre arreglos de píxeles para poder probarlo
 // con Vitest y moverlo a un Worker si hace falta. Receta (validada en pb/tools/garments.mjs):
 //   prenda = tinte × sombreado (+ realce de luces en tintes oscuros: multiplicar solo aplana)
-//   diseño = muestreado por homografía dentro del área, × sombreado (conserva pliegues)
+//   diseño = muestreado por homografía desde el área, × sombreado (conserva pliegues); lo
+//            recorta sólo la silueta de la prenda (o, si se pide, el borde del área)
 //   alfa   = máscara de la prenda
-import { aplicar, homografiaDesdeUnitario, invertir, type Cuad } from './homografia'
+import { aplicar, denominador, homografiaDesdeUnitario, invertir, type Cuad } from './homografia'
 
 export interface Colocacion {
   /** centro del diseño dentro del área, normalizado (0–1) */
   x: number
   y: number
-  /** 1 = el diseño cabe completo en el área (contain) */
+  /** 1 = el diseño cabe completo en el área (contain); hasta ESCALA_MAXIMA */
   scale: number
   /** grados */
   rotation: number
 }
 
 export const COLOCACION_INICIAL: Colocacion = { x: 0.5, y: 0.42, scale: 0.9, rotation: 0 }
+export const ESCALA_MINIMA = 0.15
+/** Hasta 3 veces el área de impresión: el diseño puede cubrir el frente de cualquier prenda
+ *  (en la gorra el área es chica). */
+export const ESCALA_MAXIMA = 3
+
+/** 'prenda' (por defecto, todas las prendas): sólo lo corta la silueta de la prenda.
+ *  'area': se corta en el borde del área de impresión. */
+export type Recorte = 'area' | 'prenda'
 
 export interface Arte {
   rgba: Uint8ClampedArray
@@ -36,6 +45,7 @@ export interface Entrada {
   area: Cuad
   arte?: Arte
   colocacion?: Colocacion
+  recorte?: Recorte
 }
 
 const oscuro = (t: [number, number, number]) => (t[0] + t[1] + t[2]) / 3 < 90
@@ -46,7 +56,7 @@ export function proporcionArea(q: Cuad): number {
   return (d(q[0], q[1]) + d(q[3], q[2])) / (d(q[0], q[3]) + d(q[1], q[2]))
 }
 
-export function componer({ size, sombreado, mascara, tinte, area, arte, colocacion = COLOCACION_INICIAL }: Entrada): Uint8ClampedArray<ArrayBuffer> {
+export function componer({ size, sombreado, mascara, tinte, area, arte, colocacion = COLOCACION_INICIAL, recorte = 'prenda' }: Entrada): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(size * size * 4)
   const lift = oscuro(tinte)
   const tr = tinte[0] / 255
@@ -56,10 +66,19 @@ export function componer({ size, sombreado, mascara, tinte, area, arte, colocaci
   // área en píxeles de salida y su homografía inversa (salida → u, v)
   const q = area.map(([x, y]) => [x * size, y * size]) as Cuad
   const inv = invertir(homografiaDesdeUnitario(q))
+  const libre = recorte === 'prenda'
+  // Fuera del área, en un área trapecio (la gorra) la perspectiva tiene un «horizonte»: más allá
+  // la proyección sale reflejada, y cerca de él se estira al infinito. Sólo se pinta donde el
+  // denominador tiene el signo del centro del área y no es casi cero.
+  const cx0 = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4
+  const cy0 = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4
+  const wCentro = denominador(inv, cx0, cy0)
   let x0 = size, y0 = size, x1 = 0, y1 = 0
-  for (const [x, y] of q) {
-    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y)
-  }
+  if (libre) [x0, y0, x1, y1] = [0, 0, size, size]
+  else
+    for (const [x, y] of q) {
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y)
+    }
   // espacio del área: AW × AH "px de área"; el diseño cabe (contain) × scale
   const AH = 1000
   const AW = AH * proporcionArea(area)
@@ -81,9 +100,9 @@ export function componer({ size, sombreado, mascara, tinte, area, arte, colocaci
       let g = tg * s + up
       let b = tb * s + up
 
-      if (arte && x >= x0 && x <= x1 && y >= y0 && y <= y1) {
+      if (arte && x >= x0 && x <= x1 && y >= y0 && y <= y1 && (!libre || denominador(inv, x + 0.5, y + 0.5) / wCentro > 0.2)) {
         const [u, v] = aplicar(inv, x + 0.5, y + 0.5)
-        if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+        if (libre || (u >= 0 && u <= 1 && v >= 0 && v <= 1)) {
           // punto del área → coordenadas del diseño (deshacer centro, rotación y escala)
           const px = u * AW - cx
           const py = v * AH - cy

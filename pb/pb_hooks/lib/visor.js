@@ -64,6 +64,11 @@ function libro(cat) {
     catalogo: {
       id: cat.id, name: cat.getString('name'), slug: cat.getString('slug'), page_turn: cat.getString('page_turn'),
       layout: cat.getString('layout'), category_order: json(cat, 'category_order') || [],
+      // portada editada (web/src/catalogo/lienzo.ts); null = la clásica
+      portada: json(cat, 'cover_layout') || null,
+      contraportada: json(cat, 'back_layout') || null,
+      fuente: cat.getString('title_font'),
+      realce: cat.getString('product_highlight') || 'brillo',
     },
     tema: { palette: json(tema, 'palette'), fonts: json(tema, 'fonts'), fondos },
     negocio: {
@@ -76,14 +81,22 @@ function libro(cat) {
       const t = plantilla(p.getString('template'))
       const elegidos = json(p, 'colors') || []
       const rs = porProducto[p.id] || []
+      // variantes ofrecidas («Con gorro», «Sin gorro»); la primera es la de las páginas. Un render
+      // sin `template` es de la plantilla del producto (anterior a las variantes).
+      const ids = p.getStringSlice('variants').length ? p.getStringSlice('variants') : [t.id]
+      const variante = (r) => r.getString('template') || t.id
+      const urls = (r) => ({ r480: r ? urlFirmada(r.id, '480', exp) : '', r960: r ? urlFirmada(r.id, '960', exp) : '' })
       return {
         id: p.id, category: p.getString('category'), sort: p.getInt('sort'), name: p.getString('name'), price: p.getFloat('price'),
         sizes: json(p, 'sizes') || [],
+        variantes: ids.length > 1 ? ids.map((id) => ({ id, name: plantilla(id).getString('variant_name') || plantilla(id).getString('name') })) : [],
         colores: (json(t, 'colors') || [])
           .filter((c) => elegidos.includes(c.name))
           .map((c) => {
-            const r = rs.find((x) => x.getString('color') === c.name)
-            return { name: c.name, hex: c.hex, r480: r ? urlFirmada(r.id, '480', exp) : '', r960: r ? urlFirmada(r.id, '960', exp) : '' }
+            const deColor = rs.filter((x) => x.getString('color') === c.name)
+            const porVariante = {}
+            if (ids.length > 1) for (const id of ids) porVariante[id] = urls(deColor.find((x) => variante(x) === id))
+            return { name: c.name, hex: c.hex, ...urls(deColor.find((x) => variante(x) === ids[0]) || deColor[0]), variantes: porVariante }
           }),
       }
     }),

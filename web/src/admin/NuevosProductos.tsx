@@ -2,11 +2,11 @@ import { useEffect, useState, type DragEvent, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ImagePlus, LoaderCircle, TriangleAlert, X } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Catalog } from '../lib/types'
+import type { Catalog, GarmentTemplate } from '../lib/types'
 import { useCategorias, usePlantillas } from '../lib/datos'
 import { useNegocio } from '../lib/negocio'
 import { leerDiseno } from '../lib/mockup/navegador'
-import { coloresPara, crearProductos } from '../lib/mockup/productos'
+import { coloresPara, crearProductos, totalRenders, variantesDe } from '../lib/mockup/productos'
 import { Hoja } from '../components/shell/Hoja'
 import { Button } from '../components/ui/button'
 import { cn } from '../lib/utils'
@@ -17,11 +17,15 @@ type Elegido = { archivo: File; url: string; avisos: string[] | null }
 // render por color (decidido en el interrogatorio, Q3).
 export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Catalog; abierta: boolean; onClose: () => void }) {
   const qc = useQueryClient()
-  const { data: plantillas = [] } = usePlantillas()
+  const { data: todas = [] } = usePlantillas()
+  // las variantes (p. ej. «Sudadera sin gorro») no se eligen como prenda: van debajo de la suya
+  const plantillas = todas.filter((t) => !t.variant_of)
   const { data: categorias = [] } = useCategorias()
   const { data: negocio } = useNegocio()
   const [elegidos, setElegidos] = useState<Elegido[]>([])
   const [prendas, setPrendas] = useState<string[]>([])
+  // por prenda con variantes, las elegidas (todas por defecto)
+  const [variantes, setVariantes] = useState<Record<string, string[]>>({})
   const [colores, setColores] = useState<string[]>(['Blanco', 'Negro'])
   const [encima, setEncima] = useState(false)
   const [progreso, setProgreso] = useState<{ hechos: number; total: number; etapa: string } | null>(null)
@@ -29,10 +33,16 @@ export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Cata
   useEffect(() => {
     if (plantillas.length && !prendas.length) setPrendas(plantillas.map((p) => p.id))
   }, [plantillas, prendas.length])
+  useEffect(() => {
+    if (!todas.length || Object.keys(variantes).length) return
+    setVariantes(Object.fromEntries(todas.filter((t) => !t.variant_of).map((t) => [t.id, variantesDe(t, todas).map((v) => v.id)])))
+  }, [todas, variantes])
+  const ofrecidas = (t: GarmentTemplate) => variantesDe(t, todas).filter((v) => (variantes[t.id] ?? [t.id]).includes(v.id))
 
   const todosColores = [...new Map(plantillas.flatMap((p) => p.colors).map((c) => [c.name, c])).values()]
-  const usadas = plantillas.filter((p) => prendas.includes(p.id))
-  const total = elegidos.length * usadas.reduce((n, t) => n + coloresPara(t, colores).length, 0)
+  // una prenda con variantes y ninguna elegida no genera nada
+  const usadas = plantillas.filter((p) => prendas.includes(p.id) && ofrecidas(p).length)
+  const total = elegidos.length * usadas.reduce((n, t) => n + totalRenders(ofrecidas(t), coloresPara(t, colores).map((c) => c.name)), 0)
 
   function agregar(lista: FileList | null) {
     const nuevos = [...(lista ?? [])].filter((f) => f.type === 'image/png' || f.type === 'image/webp')
@@ -58,7 +68,7 @@ export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Cata
     if (!negocio) return
     try {
       const n = await crearProductos({
-        catalogo, archivos: elegidos.map((e) => e.archivo), plantillas: usadas, colores, categorias,
+        catalogo, archivos: elegidos.map((e) => e.archivo), plantillas: usadas, variantes, todas, colores, categorias,
         marca: negocio.business_name,
         onProgreso: (hechos, total, etapa) => setProgreso({ hechos, total, etapa }),
       })
@@ -154,6 +164,20 @@ export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Cata
               </Chip>
             ))}
           </div>
+          {plantillas.filter((p) => prendas.includes(p.id) && variantesDe(p, todas).length > 1).map((p) => (
+            <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl bg-muted/60 p-2">
+              <span className="px-1 text-sm text-muted-foreground">{p.name}:</span>
+              {variantesDe(p, todas).map((v) => {
+                const activo = (variantes[p.id] ?? []).includes(v.id)
+                return (
+                  <Chip key={v.id} activo={activo}
+                    onClick={() => setVariantes((m) => ({ ...m, [p.id]: activo ? (m[p.id] ?? []).filter((x) => x !== v.id) : [...(m[p.id] ?? []), v.id] }))}>
+                    {v.variant_name || v.name}
+                  </Chip>
+                )
+              })}
+            </div>
+          ))}
         </fieldset>
 
         <fieldset className="space-y-2" disabled={ocupado}>

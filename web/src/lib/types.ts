@@ -1,3 +1,5 @@
+import type { DisenoOg, DisenoPortada } from '../catalogo/lienzo'
+import type { Realce } from '../catalogo/pintar'
 // Shapes of the PocketBase collections (see pb/pb_migrations/1794768000_schema.js).
 import type { RecordModel } from 'pocketbase'
 
@@ -15,7 +17,7 @@ export interface GarmentColor {
 
 export interface GarmentTemplate extends RecordModel {
   name: string
-  kind: 'tshirt' | 'hoodie' | 'cap'
+  kind: 'tshirt' | 'hoodie' | 'crewneck' | 'cap'
   base: string
   mask: string
   shadow: string
@@ -25,6 +27,10 @@ export interface GarmentTemplate extends RecordModel {
   base_price: number
   category_name: string
   sort: number
+  /** plantilla principal de la que ésta es variante (vacío: es principal) */
+  variant_of: string
+  /** cómo la ve el cliente («Con gorro», «Sin gorro») */
+  variant_name: string
 }
 
 export interface Design extends RecordModel {
@@ -46,12 +52,16 @@ export interface Product extends RecordModel {
   colors: string[]
   sizes: string[]
   sort: number
-  expand?: { template?: GarmentTemplate; design?: Design; category?: Category }
+  /** plantillas que se ofrecen (principal + variantes); vacío = sólo `template` */
+  variants: string[]
+  expand?: { template?: GarmentTemplate; design?: Design; category?: Category; variants?: GarmentTemplate[] }
 }
 
 export interface ProductRender extends RecordModel {
   product: string
   color: string
+  /** variante que muestra (vacío = la plantilla del producto) */
+  template: string
   img_480: string
   img_960: string
 }
@@ -64,7 +74,8 @@ export interface Theme extends RecordModel {
   slug: string
   season: string
   palette: { background: string; ink: string; accent: string }
-  fonts: { title: string; body: string }
+  /** fuente: id de lib/fuentes.ts para el título de los catálogos de este tema que no elijan otra */
+  fonts: { title: string; body: string; fuente?: string }
   bg_cover: string
   bg_divider: string
   bg_products: string
@@ -98,6 +109,16 @@ export interface Catalog extends RecordModel {
   bg_back: string
   bg_filler: string
   og_image: string
+  /** portada con elementos movibles (catalogo/lienzo.ts); null = la clásica */
+  cover_layout: DisenoPortada | null
+  /** contraportada con elementos movibles; null = la clásica */
+  back_layout: DisenoPortada | null
+  /** composición de la imagen para redes; null = la plantilla por defecto */
+  og_layout: DisenoOg | null
+  /** fuente del título (lib/fuentes.ts); vacío = la del tema */
+  title_font: string
+  /** realce detrás de cada producto; vacío = brillo */
+  product_highlight: Realce | ''
   expand?: { theme?: Theme }
 }
 

@@ -113,3 +113,17 @@ Use case: ads-marketing. One full-bleed portrait 9:16 Christmas catalog BACK COV
 - **Áreas de impresión.** Se miden sobre las máscaras: el torso de la playera ocupa 0.42 del ancho (~20″), así que un estampado de 12″ × 16″ queda en 0.25 × 0.34. Están en `PRINT_AREAS` y en la migración `1794768200_garment_assets.js`.
 
 Fecha: 2026-11-15.
+
+### `pb/seed/garments/crewneck-front-white.png`
+
+- Fecha: 2026-11-16 (America/Mexico_City).
+- Intento conservado: 2 de 3, por su encuadre con márgenes cercanos al 10%, pecho amplio y liso y fondo visualmente uniforme, coherente con el set. El fondo conserva una leve variación tonal y no coincide exactamente con #E9E9E9.
+- Modelo reportado en metadatos: `gpt-image` (agente `ChatGPT`; versión específica no expuesta por la herramienta).
+- Tamaño real del PNG: 1254 × 1254 px. Original copiado sin retoques, redimensionado ni recomposición.
+- Referencias visuales del intento conservado: `hoodie-front-white.png` y `tshirt-front-white.png`, mediante la herramienta integrada `image_gen.imagegen`.
+- Prompt exacto enviado:
+
+```text
+Use case: product-mockup. One final photorealistic premium e-commerce ghost-mannequin photograph: pure WHITE crewneck pullover sweatshirt (no hood, no drawstrings, no pocket), ribbed round collar, ribbed cuffs and hem, long sleeves. Absolutely no visible person, mannequin, hanger, labels, tags, logos, text or prints. Straight front view, centered, symmetric, chest-height camera, no perspective tilt. Clean smooth blank chest suitable for printing, only soft natural folds toward edges and sleeves. Pure neutral white cotton fleece fabric, not cream or grey. Background must be perfectly solid digital flat #E9E9E9 everywhere outside the garment, not a photographed grey studio wall: no gradient, vignette, floor line, scenery or props; extremely subtle contact shadow only directly at the silhouette. Soft diffuse neutral front-top lighting, gentle realistic fabric texture and shading, no harsh highlights or color cast. Must match exactly the premium white hoodie and t-shirt catalog set (same scale, lighting and backdrop). Square, full garment at about 80% frame height with 10% empty top and bottom margins. Largest native square image size supported, at least 1024x1024. PNG.
+```
+

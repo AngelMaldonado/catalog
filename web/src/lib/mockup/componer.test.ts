@@ -60,3 +60,36 @@ describe('componer', () => {
     expect(proporcionArea([[0, 0], [3, 0], [3, 4], [0, 4]])).toBeCloseTo(0.75)
   })
 })
+
+describe('recorte', () => {
+  // diseño sólido rojo, 10×10, escalado 2×: se sale del área (la mitad central de la imagen)
+  const size = 40
+  const arte = { rgba: new Uint8ClampedArray(10 * 10 * 4).map((_, i) => (i % 4 === 0 || i % 4 === 3 ? 255 : 0)), w: 10, h: 10 }
+  const base = { size, sombreado: lisa(size, 255), mascara: lisa(size, 255), tinte: [255, 255, 255] as [number, number, number], area: rect, arte, colocacion: { x: 0.5, y: 0.5, scale: 2, rotation: 0 } }
+  const rojo = (px: Uint8ClampedArray, x: number, y: number) => px[(y * size + x) * 4 + 1] < 50
+  it("'area' corta el diseño en el borde del área", () => {
+    const px = componer({ ...base, recorte: 'area' })
+    expect(rojo(px, 20, 20)).toBe(true)
+    expect(rojo(px, 5, 20)).toBe(false) // fuera del área (x < 10)
+  })
+  it("'prenda' deja que el diseño se salga del área, hasta la silueta", () => {
+    const px = componer({ ...base, recorte: 'prenda' })
+    expect(rojo(px, 20, 20)).toBe(true)
+    expect(rojo(px, 5, 20)).toBe(true)
+    const sinPrenda = componer({ ...base, recorte: 'prenda', mascara: lisa(size, 0) })
+    expect(sinPrenda[(20 * size + 5) * 4 + 3]).toBe(0)
+  })
+})
+
+describe('perspectiva fuera del área', () => {
+  it('un área trapecio no pinta el diseño reflejado más allá del horizonte', () => {
+    // lados que se juntan hacia arriba: el horizonte queda en y ≈ 0.44 de la imagen
+    const embudo: Cuad = [[0.45, 0.5], [0.55, 0.5], [0.9, 0.9], [0.1, 0.9]]
+    const size = 50
+    const arte = { rgba: new Uint8ClampedArray(10 * 10 * 4).map((_, i) => (i % 4 === 0 || i % 4 === 3 ? 255 : 0)), w: 10, h: 10 }
+    const px = componer({ size, sombreado: lisa(size, 255), mascara: lisa(size, 255), tinte: [255, 255, 255], area: embudo, arte, colocacion: { x: 0.5, y: 0.5, scale: 3, rotation: 0 }, recorte: 'prenda' })
+    const rojo = (x: number, y: number) => px[(y * size + x) * 4 + 1] < 50
+    expect(rojo(25, 35)).toBe(true) // dentro del área
+    expect(rojo(25, 5)).toBe(false) // arriba del horizonte: antes salía reflejado
+  })
+})

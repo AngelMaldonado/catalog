@@ -36,6 +36,10 @@ export function invertir(m: Matriz): Matriz {
   return [A / det, -(b * i - c * h) / det, (b * f - c * e) / det, B / det, (a * i - c * g) / det, -(a * f - c * d) / det, C / det, -(a * h - b * g) / det, (a * e - b * d) / det]
 }
 
+/** Denominador proyectivo de `m` en (x, y). Su signo dice de qué lado del «horizonte» de la
+ *  perspectiva está el punto: del otro lado la proyección sale reflejada. */
+export const denominador = (m: Matriz, x: number, y: number) => m[6] * x + m[7] * y + m[8]
+
 export function aplicar(m: Matriz, x: number, y: number): Punto {
   const w = m[6] * x + m[7] * y + m[8]
   return [(m[0] * x + m[1] * y + m[2]) / w, (m[3] * x + m[4] * y + m[5]) / w]

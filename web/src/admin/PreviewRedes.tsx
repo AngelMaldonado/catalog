@@ -12,12 +12,12 @@ type Red = 'facebook' | 'instagram'
 // Cómo se ve el enlace del catálogo al compartirlo. Usa lo mismo que el servidor pone en las
 // etiquetas Open Graph: la imagen 1200×630 que se genera al publicar, el título y la descripción.
 // Las tarjetas imitan la app en modo claro (colores fijos, no los del tema del admin).
-export function PreviewRedes({ catalogo }: { catalogo: Catalog }) {
+export function PreviewRedes({ catalogo, imagen: propia }: { catalogo: Catalog; /** otra imagen (p. ej. sin guardar) en vez de la publicada */ imagen?: string }) {
   const { data: negocio } = useNegocio()
   const [red, setRed] = useState<Red>('facebook')
   const nombre = negocio?.business_name ?? ''
   const { titulo, descripcion } = textosOg(catalogo.name, nombre)
-  const imagen = catalogo.og_image ? pb.files.getURL(catalogo, catalogo.og_image) : null
+  const imagen = propia ?? (catalogo.og_image ? pb.files.getURL(catalogo, catalogo.og_image) : null)
   const dominio = location.host
   const logo = logoUrl(negocio)
   const avatar = logo ? (

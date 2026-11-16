@@ -4,7 +4,7 @@ import { Check, Copy, Download, Share2 } from 'lucide-react'
 import type { Catalog } from '../lib/types'
 import { useNegocio } from '../lib/negocio'
 import { Hoja } from '../components/shell/Hoja'
-import { Button } from '../components/ui/button'
+import { Button, ButtonLink } from '../components/ui/button'
 import { PreviewRedes } from './PreviewRedes'
 
 // Compartir un catálogo publicado: enlace, QR (para imprimir o mandar por WhatsApp), el menú
@@ -55,6 +55,9 @@ export function Compartir({ catalogo, abierta, onClose }: { catalogo: Catalog; a
             </Button>
           </div>
           <PreviewRedes catalogo={catalogo} />
+          <ButtonLink to={`/admin/catalogos/${catalogo.id}/redes`} variant="outline" className="w-full">
+            Editar la imagen para redes
+          </ButtonLink>
         </div>
       ) : null}
     </Hoja>

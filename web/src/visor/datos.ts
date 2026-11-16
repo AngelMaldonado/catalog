@@ -3,13 +3,17 @@
 // imágenes que esa página necesita (precarga en ventana, decidido en el spike).
 import type { FondoPagina } from '../lib/types'
 import { maquetar, type Modo } from '../catalogo/maquetar'
-import { pintarPagina, type ContextoPintado, type EspecialPintable, type PaginaPintable, type ProductoPintable } from '../catalogo/pintar'
+import type { DisenoPortada } from '../catalogo/lienzo'
+import { cargarFuente } from '../lib/fuentes'
+import { INTER, pintarPagina, type Realce, type ContextoPintado, type EspecialPintable, type PaginaPintable, type ProductoPintable } from '../catalogo/pintar'
 
 export interface ColorVisor {
   name: string
   hex: string
   r480: string
   r960: string
+  /** por variante (sólo si el producto tiene más de una); r480/r960 son de la primera */
+  variantes?: Record<string, { r480: string; r960: string }>
 }
 export interface ProductoVisor {
   id: string
@@ -18,11 +22,13 @@ export interface ProductoVisor {
   name: string
   price: number
   sizes: string[]
+  /** «Con gorro», «Sin gorro»…; vacío si sólo hay una */
+  variantes: { id: string; name: string }[]
   colores: ColorVisor[]
 }
 export interface RespuestaVisor {
-  catalogo: { id: string; name: string; slug: string; page_turn: 'rigid' | 'realistic'; layout: '1' | '2' | '4'; category_order: string[] }
-  tema: { palette: ContextoPintado['paleta']; fonts: { title: string; body: string }; fondos: Record<FondoPagina, string> }
+  catalogo: { id: string; name: string; slug: string; page_turn: 'rigid' | 'realistic'; layout: '1' | '2' | '4'; category_order: string[]; portada: DisenoPortada | null; contraportada: DisenoPortada | null; fuente: string; realce: Realce }
+  tema: { palette: ContextoPintado['paleta']; fonts: { title: string; body: string; fuente?: string }; fondos: Record<FondoPagina, string> }
   negocio: { nombre: string; logo: string; whatsapp: string; instagram: string; facebook: string; tiktok: string; direccion: string; moneda: string }
   categorias: { id: string; name: string; sort: number }[]
   productos: ProductoVisor[]
@@ -67,9 +73,22 @@ export class FuentePaginas {
       porPagina: Number(datos.catalogo.layout),
       paleta: datos.tema.palette,
       fuenteTitulo: datos.tema.fonts?.title ?? 'Georgia, serif',
+      fuenteTexto: INTER,
       fondos: {},
+      portada: datos.catalogo.portada ? { diseno: datos.catalogo.portada, productos: [] } : undefined,
+      contraportada: datos.catalogo.contraportada ? { diseno: datos.catalogo.contraportada, productos: [] } : undefined,
+      realce: datos.catalogo.realce || 'brillo',
     }
+    // la fuente del título (si el catálogo eligió una) baja en paralelo; se espera antes de pintar
+    // sin fuente propia, el título usa la del tema (si trae una) y los textos siguen en Inter
+    const propia = !!datos.catalogo.fuente
+    this.fuente = cargarFuente(datos.catalogo.fuente || datos.tema.fonts?.fuente).then((f) => {
+      if (!f) return
+      this.contexto.fuenteTitulo = f
+      if (propia) this.contexto.fuenteTexto = f
+    })
   }
+  private fuente: Promise<void>
 
   get total() {
     return this.paginas.length
@@ -107,19 +126,31 @@ export class FuentePaginas {
     return this.bitmaps.get(clave)!
   }
 
-  /** Render (480 o 960) de un color de un producto. */
-  render(productoId: string, color: string, tam: '480' | '960') {
-    return this.bitmap(`r:${productoId}:${color}:${tam}`, () => {
+  /** Render (480 o 960) de un color de un producto, en su primera variante o la pedida. */
+  render(productoId: string, color: string, tam: '480' | '960', variante?: string) {
+    return this.bitmap(`r:${productoId}:${color}:${variante ?? ''}:${tam}`, () => {
       const c = this.productos.get(productoId)?.colores.find((x) => x.name === color)
-      return c ? (tam === '480' ? c.r480 : c.r960) : ''
+      const urls = (variante && c?.variantes?.[variante]) || c
+      return urls ? (tam === '480' ? urls.r480 : urls.r960) : ''
     })
   }
 
   private async preparar(p: PaginaPintable): Promise<PaginaPintable> {
+    await this.fuente
     const tipo: FondoPagina = p.tipo === 'portada' ? 'cover' : p.tipo === 'separador' ? 'divider' : p.tipo === 'productos' ? 'products' : p.tipo === 'especial' ? 'promo' : p.tipo === 'relleno' ? 'filler' : 'back'
     const [fondo, logo] = await Promise.all([this.bitmap(`f:${tipo}`, () => this.datos.tema.fondos[tipo]), this.bitmap('logo', () => this.datos.negocio.logo)])
     this.contexto.fondos[tipo] = fondo
     this.contexto.negocio.logo = logo
+    // productos destacados en portada y contraportada: su render grande, primer color y variante
+    const editada = p.tipo === 'portada' ? this.contexto.portada : p.tipo === 'contraportada' ? this.contexto.contraportada : undefined
+    if (editada) {
+      editada.productos = await Promise.all(
+        editada.diseno.productos.map((pid) => {
+          const color = this.productos.get(pid)?.colores[0]?.name
+          return color ? this.render(pid, color, '960') : undefined
+        }),
+      )
+    }
     if (p.tipo === 'productos') {
       const tam = this.contexto.porPagina === 1 ? '960' : '480'
       const productos = await Promise.all(p.productos.map(async (pr) => ({ ...pr, render: pr.colores[0] ? await this.render(pr.id, pr.colores[0].name, tam) : undefined })))

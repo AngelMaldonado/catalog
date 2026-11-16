@@ -10,8 +10,8 @@
 //   shading  luminance of the garment normalised to its own brightest fabric (p98 → 255):
 //            multiply it over a tint or a design to keep folds and texture.
 //
-// Usage: node garments.mjs [--debug]   (writes next to the photos; --debug also writes overlays
-// with the print area to /tmp/catalog-garments for visual checks)
+// Usage: node garments.mjs [--only kind[,kind]] [--debug] [--preview]   (writes next to the
+// photos; --debug also writes cutouts to /tmp/catalog-garments for visual checks)
 import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -20,7 +20,9 @@ const DIR = new URL('../seed/garments/', import.meta.url).pathname
 const DEBUG = process.argv.includes('--debug')
 const FLAT = 0.85 // local σ below this is backdrop
 const R = 3 // local window radius (7×7)
-const KINDS = ['tshirt', 'hoodie', 'cap']
+const ALL_KINDS = ['tshirt', 'hoodie', 'crewneck', 'cap']
+const only = process.argv.indexOf('--only')
+const KINDS = only > 0 ? process.argv[only + 1].split(',') : ALL_KINDS
 
 function boxBlur(src, W, H, r) {
   const tmp = new Float32Array(W * H)
@@ -213,6 +215,7 @@ for (const kind of KINDS) {
 export const PRINT_AREAS = {
   tshirt: [[0.374, 0.21], [0.626, 0.21], [0.626, 0.546], [0.374, 0.546]],
   hoodie: [[0.385, 0.35], [0.615, 0.35], [0.615, 0.58], [0.385, 0.58]],
+  crewneck: [[0.34, 0.22], [0.66, 0.22], [0.66, 0.62], [0.34, 0.62]],
   cap: [[0.36, 0.27], [0.64, 0.27], [0.665, 0.52], [0.335, 0.52]],
 }
 console.log('PRINT_AREAS', JSON.stringify(PRINT_AREAS))

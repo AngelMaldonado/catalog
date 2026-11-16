@@ -2,7 +2,7 @@
 // exportar los renders (WebP 960 y 480, con marca de agua sutil del negocio).
 import { pb } from '../pb'
 import type { Cuad } from './homografia'
-import { componer, type Arte, type Colocacion } from './componer'
+import { componer, type Arte, type Colocacion, type Recorte } from './componer'
 import type { GarmentTemplate } from '../types'
 
 export const RENDER = 960
@@ -36,6 +36,7 @@ export interface Capas {
   sombreado: Uint8ClampedArray
   mascara: Uint8ClampedArray
   area: Cuad
+  recorte: Recorte
 }
 
 const cacheCapas = new Map<string, Promise<Capas>>()
@@ -50,6 +51,7 @@ export function capasDe(t: GarmentTemplate, size = RENDER): Promise<Capas> {
         sombreado,
         mascara,
         area: t.print_area,
+        recorte: 'prenda',
       })),
     )
   }
