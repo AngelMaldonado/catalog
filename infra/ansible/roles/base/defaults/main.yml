@@ -1,0 +1,21 @@
+---
+base_deploy_user: "{{ deploy_user | default('angel') }}"
+base_deploy_user_shell: /bin/bash
+base_authorized_key_path: ""
+base_packages:
+  - ca-certificates
+  - curl
+  - fail2ban
+  - git
+  - htop
+  - jq
+  - tmux
+  - ufw
+  - unattended-upgrades
+  - unzip
+base_ssh_port: 22
+base_manage_ssh_hardening: true
+base_firewall_http_enabled: true
+base_firewall_https_enabled: true
+base_fail2ban_maxretry: 5
+base_fail2ban_bantime: 3600

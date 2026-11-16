@@ -1,0 +1,47 @@
+---
+- name: Verify the catalog production host
+  hosts: platform
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Require SSH, Fail2ban and Docker to be running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services["ssh.service"].state == "running"
+          - ansible_facts.services["fail2ban.service"].state == "running"
+          - ansible_facts.services["docker.service"].state == "running"
+        fail_msg: SSH, Fail2ban or Docker is not running.
+
+    - name: Read the firewall status
+      ansible.builtin.command: ufw status
+      register: verify_ufw
+      changed_when: false
+
+    - name: Require the firewall to allow only SSH, HTTP and HTTPS
+      ansible.builtin.assert:
+        that:
+          - "'Status: active' in verify_ufw.stdout"
+          - verify_ufw.stdout_lines | select('search', 'ALLOW') | reject('search', '(^|\\s)(' ~ base_ssh_port ~ '|80|443)/tcp') | list | length == 0
+        fail_msg: "UFW is inactive or allows more than SSH/80/443:\n{{ verify_ufw.stdout }}"
+
+    - name: Require SSH hardening
+      ansible.builtin.command: sshd -T
+      register: verify_sshd
+      changed_when: false
+      failed_when: >-
+        'permitrootlogin no' not in verify_sshd.stdout or
+        'passwordauthentication no' not in verify_sshd.stdout
+
+    - name: Validate the stack definition
+      ansible.builtin.command:
+        cmd: docker compose config --quiet
+        chdir: /opt/catalog
+      environment:
+        # the tag is the deploy's; any value proves the file itself is valid
+        CATALOG_TAG: verify
+      become: true
+      become_user: "{{ deploy_user }}"
+      changed_when: false

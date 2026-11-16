@@ -1,0 +1,5 @@
+---
+# Full host convergence entrypoint. Use playbooks/bootstrap.yml for first contact
+# with a bare server.
+- name: Converge the catalog production platform
+  ansible.builtin.import_playbook: playbooks/platform.yml

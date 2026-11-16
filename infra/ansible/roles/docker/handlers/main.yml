@@ -1,0 +1,14 @@
+---
+# Restarting Docker restarts every container on the host; docker_restart_on_config_change
+# (defaults/main.yml) decides whether convergence does it or only reports it.
+- name: Restart Docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: Report Docker restart needed
+  ansible.builtin.debug:
+    msg: >-
+      /etc/docker/daemon.json changed. The new settings apply once Docker
+      restarts, which restarts every container: re-run with
+      -e docker_restart_on_config_change=true during a maintenance window.

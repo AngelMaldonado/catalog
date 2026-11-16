@@ -1,0 +1,21 @@
+---
+- name: Converge the catalog production host
+  hosts: platform
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Require exactly one production server
+      ansible.builtin.assert:
+        that:
+          - groups["servers"] | length == 1
+        fail_msg: >-
+          This project manages one production server, but the inventory contains
+          {{ groups["servers"] | length }}.
+  roles:
+    - role: base
+      tags: [base]
+    - role: docker
+      tags: [docker]
+    - role: catalog_app
+      tags: [catalog_app]

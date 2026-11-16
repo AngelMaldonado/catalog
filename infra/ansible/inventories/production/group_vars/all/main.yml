@@ -1,0 +1,10 @@
+---
+# Connection and operator policy shared by the production inventory.
+ansible_user: angel
+deploy_user: angel
+timezone: America/Mexico_City
+
+# First bootstrap reuses root's authorized_keys unless a controller-side key
+# path is supplied with SSH_PUBKEY_PATH.
+base_authorized_key_path: "{{ lookup('env', 'SSH_PUBKEY_PATH') }}"
+base_ssh_port: 22

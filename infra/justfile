@@ -1,0 +1,181 @@
+# Catalog infrastructure operator workflows. Conventions mirror ~/dev/ayetec/taxi/infra
+# (and ~/dev/ayetec/infra): bootstrap a bare host, converge it, verify it.
+set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
+
+inv := env_var_or_default("ANSIBLE_INVENTORY", "inventories/production/hosts.yml")
+sandbox_context := "reko-3"
+sandbox_name := "catalog-sandbox"
+
+[default]
+default:
+    @just --list
+
+# ── validation ────────────────────────────────────────────────────────────────
+
+[doc("Verify local tools and core project files")]
+[group("validation")]
+doctor:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for command_name in ansible ansible-playbook ansible-inventory ansible-lint just; do
+      command -v "$command_name" >/dev/null || { echo "ERROR: missing $command_name" >&2; exit 1; }
+    done
+    test -f ansible/ansible.cfg
+    test -f ansible/{{ inv }}
+    echo "Infrastructure workstation prerequisites are present."
+
+[doc("Install project-local Ansible collections")]
+[group("validation")]
+[working-directory("ansible")]
+deps:
+    ansible-galaxy collection install -r requirements.yml -p ../.ansible/collections
+
+[doc("Render and validate the configured inventory")]
+[group("validation")]
+[working-directory("ansible")]
+inventory:
+    ansible-inventory -i "{{ inv }}" --graph
+
+[doc("Syntax-check every supported playbook")]
+[group("validation")]
+[working-directory("ansible")]
+syntax:
+    ansible-playbook -i "{{ inv }}" --syntax-check site.yml
+    ansible-playbook -i "{{ inv }}" --syntax-check playbooks/bootstrap.yml
+    ansible-playbook -i "{{ inv }}" --syntax-check playbooks/platform.yml
+    ansible-playbook -i "{{ inv }}" --syntax-check playbooks/verify.yml
+
+[doc("Run Ansible lint")]
+[group("validation")]
+[working-directory("ansible")]
+lint:
+    ansible-lint --config-file ../.ansible-lint site.yml playbooks roles
+
+[doc("Justfile formatting: check")]
+[group("validation")]
+format action:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{ action }}" in
+      check) just --fmt --check ;;
+      *) echo "ERROR: format action must be: check" >&2; exit 2 ;;
+    esac
+
+[doc("Run inventory, syntax, lint, and justfile checks")]
+[group("validation")]
+check: doctor inventory syntax lint (format "check")
+
+# ── provisioning ─────────────────────────────────────────────────────────────
+
+[doc("First contact with a bare host, then converge and verify it (the one command for a new VPS)")]
+[group("provision")]
+provision host="catalog-production" initial_user="root":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if grep -q '192\.0\.2\.10' "ansible/{{ inv }}"; then
+      echo "ERROR: ansible/{{ inv }} still has the placeholder address 192.0.2.10; put the VPS IP in ansible_host" >&2
+      exit 1
+    fi
+    just bootstrap "{{ host }}" "{{ initial_user }}"
+    just platform "{{ host }}"
+    just verify "{{ host }}"
+
+[doc("Bootstrap a bare inventory host with its initial SSH user")]
+[group("provision")]
+[working-directory("ansible")]
+bootstrap host initial_user="root":
+    ansible-playbook -i "{{ inv }}" --limit "{{ host }}" -u "{{ initial_user }}" \
+      -e "ansible_user={{ initial_user }}" playbooks/bootstrap.yml
+
+# `just platform [limit] [check]` converges; `just platform diff [limit]`
+# previews the same convergence in check and diff mode.
+[doc("Converge OS baseline, Docker and the catalog stack files: [limit] [check], or diff [limit] to preview")]
+[group("provision")]
+platform *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -- {{ args }}
+    if [ "${1:-}" = diff ]; then
+      exec just _run playbooks/platform.yml "${2:-platform}" yes
+    fi
+    exec just _run playbooks/platform.yml "${1:-platform}" "${2:-}"
+
+[doc("Run post-convergence platform checks")]
+[group("provision")]
+verify limit="platform":
+    @just _run playbooks/verify.yml "{{ limit }}" ""
+
+# ── disposable sandbox ───────────────────────────────────────────────────────
+
+[doc("Disposable Ubuntu 24.04 target on reko-3: up, provision, status, destroy")]
+[group("sandbox")]
+sandbox action:
+    @just _sandbox_{{ action }}
+
+[private]
+_sandbox_up:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if docker --context {{ sandbox_context }} container inspect {{ sandbox_name }} >/dev/null 2>&1; then
+      echo "ERROR: {{ sandbox_name }} already exists; run 'just sandbox destroy' first" >&2
+      exit 1
+    fi
+    # the operator's public key: SSH_PUBKEY_PATH, or the first key the SSH agent offers
+    # (the shell's agent, else 1Password's, which ssh_config usually sets as IdentityAgent)
+    op_agent="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    if [ -n "${SSH_PUBKEY_PATH:-}" ]; then
+      public_key=$(cat "$SSH_PUBKEY_PATH")
+    else
+      public_key=$({ ssh-add -L 2>/dev/null || SSH_AUTH_SOCK="$op_agent" ssh-add -L 2>/dev/null || true; } | head -n 1)
+    fi
+    [ -n "$public_key" ] || { echo "ERROR: no public key; set SSH_PUBKEY_PATH or load a key in the agent" >&2; exit 1; }
+    docker --context {{ sandbox_context }} build --tag {{ sandbox_name }}:ubuntu24.04 sandbox
+    # privileged + real volumes for Docker's and containerd's stores: Docker runs inside
+    # (overlayfs cannot mount on top of the container's own overlayfs)
+    docker --context {{ sandbox_context }} run --detach \
+      --name {{ sandbox_name }} \
+      --hostname {{ sandbox_name }} \
+      --privileged \
+      --cgroupns private \
+      --tmpfs /run \
+      --tmpfs /run/lock \
+      --volume {{ sandbox_name }}-docker:/var/lib/docker \
+      --volume {{ sandbox_name }}-containerd:/var/lib/containerd \
+      --publish 127.0.0.1:22223:22 \
+      {{ sandbox_name }}:ubuntu24.04
+    for _ in $(seq 1 30); do
+      if docker --context {{ sandbox_context }} exec {{ sandbox_name }} systemctl is-active --quiet ssh; then break; fi
+      sleep 1
+    done
+    docker --context {{ sandbox_context }} exec {{ sandbox_name }} systemctl is-active --quiet ssh
+    printf '%s\n' "$public_key" | docker --context {{ sandbox_context }} exec --interactive {{ sandbox_name }} sh -c \
+      'install -d -m 0700 /root/.ssh && cat > /root/.ssh/authorized_keys && chmod 0600 /root/.ssh/authorized_keys'
+    echo "Sandbox target is ready."
+
+[private]
+_sandbox_provision:
+    ANSIBLE_INVENTORY=inventories/sandbox/hosts.yml just bootstrap catalog-sandbox root
+    ANSIBLE_INVENTORY=inventories/sandbox/hosts.yml just platform
+    ANSIBLE_INVENTORY=inventories/sandbox/hosts.yml just verify
+
+[private]
+_sandbox_status:
+    docker --context {{ sandbox_context }} ps --filter name={{ sandbox_name }}
+    docker --context {{ sandbox_context }} exec {{ sandbox_name }} systemctl is-system-running
+
+[private]
+_sandbox_destroy:
+    docker --context {{ sandbox_context }} container rm --force {{ sandbox_name }}
+    docker --context {{ sandbox_context }} volume rm {{ sandbox_name }}-docker {{ sandbox_name }}-containerd
+    docker --context {{ sandbox_context }} image rm {{ sandbox_name }}:ubuntu24.04
+    rm -f .ansible/sandbox_known_hosts
+
+[private]
+[working-directory("ansible")]
+_run playbook limit check="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    check_args=()
+    if [ "{{ check }}" = yes ] || [ "{{ check }}" = check=yes ]; then check_args=(--check --diff); fi
+    ansible-playbook -i "{{ inv }}" --limit "{{ limit }}" \
+      ${check_args[@]+"${check_args[@]}"} "{{ playbook }}"

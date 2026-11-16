@@ -1,0 +1,4 @@
+---
+# Caddy only obtains a certificate once DNS points here; in the sandbox it
+# just keeps retrying, which is fine for testing provisioning.
+catalog_app_domain: catalog-sandbox.invalid

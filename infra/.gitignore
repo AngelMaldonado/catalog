@@ -1,0 +1,14 @@
+# Ansible controller state
+.ansible/
+*.retry
+.vault_pass*
+.vault-secrets.env
+
+# Secrets and local overrides
+.env
+*.pem
+*.key
+*.local.yml
+
+# OS
+.DS_Store

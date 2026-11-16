@@ -1,0 +1,7 @@
+---
+exclude_paths:
+  - .ansible/
+skip_list:
+  # UFW has no ansible-core module. These narrowly-scoped CLI tasks mirror the
+  # established Ayetec infrastructure project and declare their changed state.
+  - command-instead-of-module

@@ -1,0 +1,24 @@
+---
+- name: Prepare Python on a bare production server
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Install Python when absent
+      ansible.builtin.raw: |
+        if command -v python3 >/dev/null 2>&1; then
+          echo PYTHON_PRESENT
+        else
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+          echo PYTHON_INSTALLED
+        fi
+      register: bootstrap_python
+      changed_when: "'PYTHON_INSTALLED' in bootstrap_python.stdout"
+
+- name: Establish the managed operator account
+  hosts: all
+  become: true
+  roles:
+    - role: base
+      tags: [bootstrap, base]

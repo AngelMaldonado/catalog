@@ -1,0 +1,174 @@
+---
+- name: Assert a supported Ubuntu release
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_version is version("24.04", ">=")
+    fail_msg: >-
+      The base role supports Ubuntu 24.04 LTS or newer; detected
+      {{ ansible_distribution }} {{ ansible_distribution_version }}.
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Read the configured timezone
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: base_current_timezone
+  changed_when: false
+
+- name: Configure the host timezone
+  ansible.builtin.command: "timedatectl set-timezone {{ timezone }}"
+  when: base_current_timezone.stdout != timezone
+  changed_when: true
+
+- name: Create the managed operator user
+  ansible.builtin.user:
+    name: "{{ base_deploy_user }}"
+    groups: sudo
+    shell: "{{ base_deploy_user_shell }}"
+    create_home: true
+    append: true
+
+- name: Create the operator SSH directory
+  ansible.builtin.file:
+    path: "/home/{{ base_deploy_user }}/.ssh"
+    state: directory
+    owner: "{{ base_deploy_user }}"
+    group: "{{ base_deploy_user }}"
+    mode: "0700"
+
+- name: Install the controller-provided operator key
+  ansible.builtin.copy:
+    dest: "/home/{{ base_deploy_user }}/.ssh/authorized_keys"
+    content: "{{ lookup('file', base_authorized_key_path) | trim }}\n"
+    owner: "{{ base_deploy_user }}"
+    group: "{{ base_deploy_user }}"
+    mode: "0600"
+  when: base_authorized_key_path | length > 0
+
+- name: Check for existing operator authorized keys
+  ansible.builtin.stat:
+    path: "/home/{{ base_deploy_user }}/.ssh/authorized_keys"
+  register: base_operator_authorized_keys
+  when: base_authorized_key_path | length == 0
+
+- name: Check for root authorized keys
+  ansible.builtin.stat:
+    path: /root/.ssh/authorized_keys
+  register: base_root_authorized_keys
+  when:
+    - base_authorized_key_path | length == 0
+    - not base_operator_authorized_keys.stat.exists
+
+- name: Require an authorized-key source before SSH hardening
+  ansible.builtin.assert:
+    that: base_root_authorized_keys.stat.exists
+    fail_msg: >-
+      Root has no authorized_keys file. Set SSH_PUBKEY_PATH or
+      base_authorized_key_path before bootstrapping this host.
+  when:
+    - base_authorized_key_path | length == 0
+    - not base_operator_authorized_keys.stat.exists
+
+- name: Reuse root authorized keys for the operator
+  ansible.builtin.copy:
+    src: /root/.ssh/authorized_keys
+    dest: "/home/{{ base_deploy_user }}/.ssh/authorized_keys"
+    remote_src: true
+    owner: "{{ base_deploy_user }}"
+    group: "{{ base_deploy_user }}"
+    mode: "0600"
+  when:
+    - base_authorized_key_path | length == 0
+    - not base_operator_authorized_keys.stat.exists
+
+- name: Allow passwordless sudo for automation
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ base_deploy_user }}"
+    content: "{{ base_deploy_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+# sshd keeps the FIRST value it reads and includes drop-ins in lexical order, so the
+# hardening must sort first: as 99-* it lost to cloud images' 50-cloud-init.conf
+# (often PasswordAuthentication yes) and to the sandbox's 00-sandbox.conf.
+- name: Remove the late-sorting SSH hardening drop-in
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d/99-catalog-hardening.conf
+    state: absent
+  notify:
+    - Validate SSH configuration
+    - Restart SSH
+
+- name: Install SSH hardening drop-in
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-catalog-hardening.conf
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+    owner: root
+    group: root
+    mode: "0644"
+  when: base_manage_ssh_hardening
+  notify:
+    - Validate SSH configuration
+    - Restart SSH
+
+- name: Deny incoming traffic by default
+  ansible.builtin.command: ufw default deny incoming
+  changed_when: false
+
+- name: Allow SSH through UFW
+  ansible.builtin.command: "ufw allow {{ base_ssh_port }}/tcp"
+  register: base_ufw_ssh
+  changed_when: "'Skipping adding existing rule' not in base_ufw_ssh.stdout"
+
+- name: Allow HTTP through UFW
+  ansible.builtin.command: ufw allow 80/tcp
+  register: base_ufw_http
+  changed_when: "'Skipping adding existing rule' not in base_ufw_http.stdout"
+  when: base_firewall_http_enabled
+
+- name: Allow HTTPS through UFW
+  ansible.builtin.command: ufw allow 443/tcp
+  register: base_ufw_https
+  changed_when: "'Skipping adding existing rule' not in base_ufw_https.stdout"
+  when: base_firewall_https_enabled
+
+- name: Enable UFW
+  ansible.builtin.command: ufw --force enable
+  register: base_ufw_enable
+  changed_when: >-
+    'Firewall is active and enabled on system startup' not in base_ufw_enable.stdout
+
+- name: Configure Fail2ban for SSH
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Fail2ban
+
+- name: Enable and start Fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Enable automatic security updates
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+    owner: root
+    group: root
+    mode: "0644"

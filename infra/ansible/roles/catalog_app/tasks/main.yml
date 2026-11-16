@@ -1,0 +1,54 @@
+---
+- name: Require the public domain
+  ansible.builtin.assert:
+    that: catalog_app_domain | length > 0
+    fail_msg: Set catalog_app_domain in the inventory (group_vars/platform).
+
+- name: Create the stack directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ catalog_app_owner }}"
+    group: "{{ catalog_app_owner }}"
+    mode: "0750"
+  loop:
+    - "{{ catalog_app_root }}"
+    # a directory, not a single-file bind mount: Ansible replaces files by
+    # rename, and a file mount would keep showing the container the old inode
+    - "{{ catalog_app_root }}/caddy"
+
+- name: Install the compose file
+  ansible.builtin.copy:
+    src: "{{ catalog_app_compose_src }}"
+    dest: "{{ catalog_app_root }}/compose.yaml"
+    owner: "{{ catalog_app_owner }}"
+    group: "{{ catalog_app_owner }}"
+    mode: "0640"
+  notify: Apply the catalog stack
+
+- name: Install the Caddy configuration
+  ansible.builtin.copy:
+    src: "{{ catalog_app_caddyfile_src }}"
+    dest: "{{ catalog_app_root }}/caddy/Caddyfile"
+    owner: "{{ catalog_app_owner }}"
+    group: "{{ catalog_app_owner }}"
+    mode: "0640"
+  notify: Apply the catalog stack
+
+# .env holds two values with two owners: the domain is the inventory's, the
+# image tag is the deploy's (`just release deploy`). Each writes only its line.
+- name: Create the stack environment file
+  ansible.builtin.copy:
+    dest: "{{ catalog_app_root }}/.env"
+    content: ""
+    force: false
+    owner: "{{ catalog_app_owner }}"
+    group: "{{ catalog_app_owner }}"
+    mode: "0600"
+
+- name: Set the public domain
+  ansible.builtin.lineinfile:
+    path: "{{ catalog_app_root }}/.env"
+    regexp: "^CATALOG_DOMAIN="
+    line: "CATALOG_DOMAIN={{ catalog_app_domain }}"
+  notify: Apply the catalog stack

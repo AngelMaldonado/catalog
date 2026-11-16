@@ -1,0 +1,10 @@
+---
+# Where the stack lives on the host. The compose file and the Caddy config are
+# the repository's own (docker/), copied as they are: the repo is the reviewable
+# copy, the host just runs it.
+catalog_app_root: /opt/catalog
+catalog_app_owner: "{{ deploy_user | default('angel') }}"
+catalog_app_domain: ""
+catalog_app_repo_root: "{{ playbook_dir }}/../../.."
+catalog_app_compose_src: "{{ catalog_app_repo_root }}/docker/compose.production.yaml"
+catalog_app_caddyfile_src: "{{ catalog_app_repo_root }}/docker/Caddyfile"

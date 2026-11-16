@@ -1,0 +1,20 @@
+---
+# Only once a release has been deployed: before the first `just release deploy`
+# there is no CATALOG_TAG and nothing to start.
+- name: Apply the catalog stack
+  ansible.builtin.shell: |
+    set -eu
+    cd {{ catalog_app_root | quote }}
+    if grep -q '^CATALOG_TAG=.' .env; then
+      docker compose up -d --remove-orphans
+      docker compose restart caddy
+      echo APPLIED
+    else
+      echo NO_RELEASE_YET
+    fi
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ catalog_app_owner }}"
+  register: catalog_app_apply
+  changed_when: "'APPLIED' in catalog_app_apply.stdout"
