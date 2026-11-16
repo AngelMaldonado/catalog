@@ -4,6 +4,10 @@ name: Qualify
 # versión; en los PR, además, que los commits sigan Conventional Commits (de ellos
 # sale la versión). Reutilizable: lo llaman los PR, los push a main y release.yml
 # (una calificación que existe dos veces diverge en un mes).
+#
+# Corre en el runner propio (etiqueta `catalog`, en reko-3): el repo es privado y los
+# runners de GitHub cobran minutos. Nada usa el cache de Actions (su almacenamiento
+# también se cobra): el runner trae su propio Docker y descarga Node y pnpm.
 
 on:
   pull_request:
@@ -16,7 +20,7 @@ permissions:
 
 jobs:
   qualify:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, catalog]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
@@ -34,6 +38,7 @@ jobs:
           scanners: secret
           exit-code: '1'
           severity: HIGH,CRITICAL
+          cache: 'false'
 
       - uses: pnpm/action-setup@v4
         with:
@@ -42,8 +47,6 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Versión
         run: node --test scripts/release/version.test.mjs
@@ -58,7 +61,7 @@ jobs:
   commits:
     # sólo en PR: lo que llega a main ya pasó por aquí o lo empujó el dueño
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, catalog]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5

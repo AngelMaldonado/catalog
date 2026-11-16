@@ -1,0 +1,4 @@
+self-hosted-runner:
+  # runner propio en reko-3 (runner-fleet)
+  labels:
+    - catalog

@@ -6,7 +6,8 @@ name: Release
 #   tag → qualify → imagen ghcr.io/angelmaldonado/catalog:vX.Y.Z · :<sha>
 #       → release en GitHub con el manifiesto (imagen por digest)
 #
-# No despliega: ningún secreto del servidor vive aquí. Después:
+# Corre en el runner propio (etiqueta `catalog`, en reko-3, Docker por dind), sin el
+# cache de Actions. No despliega: ningún secreto del servidor vive aquí. Después:
 #   just release deploy vX.Y.Z
 #   just release verify <sha>
 
@@ -31,7 +32,7 @@ jobs:
 
   publish:
     needs: qualify
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, catalog]
     timeout-minutes: 30
     permissions:
       contents: write
@@ -55,7 +56,12 @@ jobs:
             echo "published_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           } >> "$GITHUB_OUTPUT"
 
+      # el runner no trae el plugin buildx (sin él no hay TARGETARCH en el Dockerfile);
+      # driver docker: construye en el dind del runner y reutiliza su cache de capas
       - uses: docker/setup-buildx-action@v3
+        with:
+          version: v0.38.1
+          driver: docker
 
       - uses: docker/login-action@v3
         with:
@@ -80,8 +86,6 @@ jobs:
             APP_VERSION=${{ steps.release.outputs.version }}
             APP_BUILD_HASH=${{ github.sha }}
             APP_BUILD_DATE=${{ steps.release.outputs.published_at }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Manifiesto
         env:
@@ -100,18 +104,28 @@ jobs:
             > release-image.json
           cat release-image.json
 
+      # el runner no trae gh: la API de releases con curl
       - name: Release en GitHub
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
           TAG: ${{ steps.release.outputs.tag }}
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" 'release-image.json#Manifiesto de la imagen' --clobber
-          else
-            gh release create "$TAG" 'release-image.json#Manifiesto de la imagen' \
-              --verify-tag --latest --generate-notes --title "$TAG"
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer ${GH_TOKEN}" -H 'Accept: application/vnd.github+json')
+          release=$(curl -fsS "${auth[@]}" "$api/releases/tags/$TAG" || true)
+          if [ -z "$release" ]; then
+            release=$(jq -n --arg tag "$TAG" \
+              '{tag_name: $tag, name: $tag, generate_release_notes: true, make_latest: "true"}' |
+              curl -fsS "${auth[@]}" -X POST "$api/releases" -d @-)
           fi
+          id=$(jq -er '.id' <<< "$release")
+          # un re-run reemplaza el manifiesto
+          for asset in $(jq -r '.assets[]? | select(.name == "release-image.json") | .id' <<< "$release"); do
+            curl -fsS "${auth[@]}" -X DELETE "$api/releases/assets/$asset"
+          done
+          curl -fsS "${auth[@]}" -H 'Content-Type: application/json' --data-binary @release-image.json \
+            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/$id/assets?name=release-image.json" >/dev/null
+          echo "release $TAG: $(jq -r '.html_url' <<< "$release")"
 
       - name: Resumen
         env:
