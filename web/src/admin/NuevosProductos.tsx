@@ -1,4 +1,4 @@
-import { useEffect, useState, type DragEvent } from 'react'
+import { useEffect, useState, type DragEvent, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ImagePlus, LoaderCircle, TriangleAlert, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -149,10 +149,9 @@ export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Cata
           <legend className="text-sm font-medium">Prendas</legend>
           <div className="flex flex-wrap gap-2">
             {plantillas.map((p) => (
-              <button key={p.id} type="button" aria-pressed={prendas.includes(p.id)} onClick={() => setPrendas((l) => alternar(l, p.id))}
-                className={cn('h-10 rounded-full border px-4 text-sm font-medium', prendas.includes(p.id) ? 'border-acento bg-acento-tinte text-acento-texto' : 'text-muted-foreground')}>
+              <Chip key={p.id} activo={prendas.includes(p.id)} onClick={() => setPrendas((l) => alternar(l, p.id))}>
                 {p.name}
-              </button>
+              </Chip>
             ))}
           </div>
         </fieldset>
@@ -161,15 +160,27 @@ export function NuevosProductos({ catalogo, abierta, onClose }: { catalogo: Cata
           <legend className="text-sm font-medium">Colores</legend>
           <div className="flex flex-wrap gap-2">
             {todosColores.map((c) => (
-              <button key={c.name} type="button" aria-pressed={colores.includes(c.name)} onClick={() => setColores((l) => alternar(l, c.name))}
-                className={cn('flex h-10 items-center gap-2 rounded-full border px-3 text-sm', colores.includes(c.name) ? 'border-acento bg-acento-tinte font-medium text-acento-texto' : 'text-muted-foreground')}>
+              <Chip key={c.name} activo={colores.includes(c.name)} onClick={() => setColores((l) => alternar(l, c.name))}>
                 <span className="size-5 rounded-full ring-1 ring-black/15" style={{ background: c.hex }} />
                 {c.name}
-              </button>
+              </Chip>
             ))}
           </div>
         </fieldset>
       </div>
     </Hoja>
+  )
+}
+
+// Chip de selección múltiple con un radio: lleno si está en la selección, hueco si no.
+function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" aria-pressed={activo} onClick={onClick}
+      className={cn('flex h-10 items-center gap-2 rounded-full border pr-4 pl-3 text-sm font-medium transition-colors', activo ? 'border-acento bg-acento-tinte text-acento-texto' : 'text-muted-foreground')}>
+      <span aria-hidden className={cn('flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors', activo ? 'border-acento' : 'border-muted-foreground/50')}>
+        {activo && <span className="size-2 rounded-full bg-acento" />}
+      </span>
+      {children}
+    </button>
   )
 }

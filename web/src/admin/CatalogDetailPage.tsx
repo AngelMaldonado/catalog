@@ -86,7 +86,7 @@ export function CatalogDetailPage() {
               {c.expand?.theme?.name} · {VUELTA[c.page_turn]} · {c.layout} por página
             </span>
           </div>
-          <div className="mt-3 grid grid-cols-4 gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <ButtonLink to={`/admin/catalogos/${id}/vista`} variant="secondary" className="h-16 flex-col gap-1 rounded-2xl text-xs">
               <Eye className="size-5" /> Vista previa
             </ButtonLink>

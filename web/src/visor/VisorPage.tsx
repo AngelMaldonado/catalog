@@ -77,7 +77,8 @@ export function VisorPage({ slug, sinVigente }: { slug?: string; sinVigente?: Re
   }
 
   return (
-    <VisorShell negocio={d.negocio.nombre} logo={d.negocio.logo} catalogo={d.catalogo.name} whatsapp={d.negocio.whatsapp} contador={contador}>
+    <VisorShell negocio={d.negocio.nombre} logo={d.negocio.logo} catalogo={d.catalogo.name} whatsapp={d.negocio.whatsapp} contador={contador}
+      fondo={d.tema.fondos.cover || d.tema.fondos.products} paleta={d.tema.palette}>
       <LibroVista
         fuente={fuente}
         modo={modo}

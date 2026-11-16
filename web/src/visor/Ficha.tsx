@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { MessageCircle } from 'lucide-react'
 import { Hoja } from '../components/shell/Hoja'
 import { cn } from '../lib/utils'
 import type { FuentePaginas, ProductoVisor } from './datos'
 import { registrar } from './eventos'
+import { WhatsApp } from '../components/iconos/WhatsApp'
 
 const dinero = (n: number, moneda: string) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda || 'MXN', maximumFractionDigits: 0 }).format(n)
 
@@ -64,7 +64,7 @@ export default function Ficha({ fuente, producto, whatsapp, moneda, slug, onClos
             }}
             className={cn('flex h-12 w-full items-center justify-center gap-2 rounded-4xl bg-primary text-base font-semibold text-primary-foreground', faltaTalla && 'opacity-50')}
           >
-            <MessageCircle className="size-5" /> {faltaTalla ? 'Elige tu talla' : 'Pedir por WhatsApp'}
+            <WhatsApp /> {faltaTalla ? 'Elige tu talla' : 'Pedir por WhatsApp'}
           </a>
         ) : (
           <p className="text-center text-sm text-muted-foreground">Este negocio todavía no configuró su WhatsApp.</p>

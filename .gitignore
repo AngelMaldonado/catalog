@@ -16,3 +16,6 @@ spikes/*/metrics.jsonl
 spikes/*/public/img/
 spikes/*/public/bg/
 pb/seed/themes/_raw/
+
+# TypeScript build info
+web/tsconfig.tsbuildinfo

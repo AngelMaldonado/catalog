@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 import { ChevronRight } from 'lucide-react'
@@ -15,7 +15,7 @@ export function Grupo({ titulo, children, className }: { titulo?: string; childr
   )
 }
 
-type FilaProps = { icono?: LucideIcon; titulo: string; sub?: string; extra?: ReactNode; to?: string; onClick?: () => void; deshabilitada?: boolean }
+type FilaProps = { icono?: ComponentType<{ className?: string }>; titulo: string; sub?: string; extra?: ReactNode; to?: string; onClick?: () => void; deshabilitada?: boolean }
 
 export function Fila({ icono: Icono, titulo, sub, extra, to, onClick, deshabilitada }: FilaProps) {
   const { pathname } = useLocation()

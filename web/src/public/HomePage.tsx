@@ -1,4 +1,6 @@
-import { AtSign, LoaderCircle, MapPin, MessageCircle, Music2, Users } from 'lucide-react'
+import type { ComponentType } from 'react'
+import { AtSign, LoaderCircle, MapPin, Music2, Users } from 'lucide-react'
+import { WhatsApp } from '../components/iconos/WhatsApp'
 import { useNegocio, logoUrl } from '../lib/negocio'
 import { iniciales } from '../lib/utils'
 import { VisorPage } from '../visor/VisorPage'
@@ -20,11 +22,11 @@ function Contacto() {
   const logo = logoUrl(negocio)
   const wa = negocio?.whatsapp.replace(/\D/g, '')
   const enlaces = [
-    wa && { href: `https://wa.me/${wa}`, texto: 'WhatsApp', icono: MessageCircle },
+    wa && { href: `https://wa.me/${wa}`, texto: 'WhatsApp', icono: WhatsApp },
     negocio?.instagram && { href: negocio.instagram, texto: 'Instagram', icono: AtSign },
     negocio?.facebook && { href: negocio.facebook, texto: 'Facebook', icono: Users },
     negocio?.tiktok && { href: negocio.tiktok, texto: 'TikTok', icono: Music2 },
-  ].filter(Boolean) as { href: string; texto: string; icono: typeof MessageCircle }[]
+  ].filter(Boolean) as { href: string; texto: string; icono: ComponentType<{ className?: string }> }[]
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-5 py-10 text-center">

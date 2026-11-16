@@ -21,7 +21,7 @@ export function MenuInferior({ items }: { items: ItemMenu[] }) {
               className={({ isActive: a }) => {
                 const isActive = a || (!!it.tambien && pathname.startsWith(it.tambien))
                 return cn(
-                  'relative flex h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-medium transition-colors',
+                  'flex h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-medium transition-colors',
                   isActive ? 'bg-acento-tinte text-acento-texto' : 'text-muted-foreground hover:bg-muted',
                 )
               }}
@@ -30,7 +30,6 @@ export function MenuInferior({ items }: { items: ItemMenu[] }) {
                 const isActive = a || (!!it.tambien && pathname.startsWith(it.tambien))
                 return (
                 <>
-                  {isActive && <span className="absolute top-1.5 right-2.5 size-1.5 rounded-full bg-marca" aria-hidden />}
                   <it.icono className="size-5" strokeWidth={isActive ? 2.25 : 1.75} />
                   {it.texto}
                 </>
