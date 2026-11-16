@@ -1,0 +1,13 @@
+---
+swap_enabled: false
+swap_file_path: /swapfile
+swap_file_size_mb: 2048
+swap_swappiness: 10
+
+# A host may carry several swap files. Growing one in place means swapping it
+# off first, and a swapoff has to page its contents back into RAM — which is
+# exactly what a host short on memory cannot do. Adding a second file is the
+# safe way to grow total swap on a live host.
+swap_files:
+  - path: "{{ swap_file_path }}"
+    size_mb: "{{ swap_file_size_mb }}"

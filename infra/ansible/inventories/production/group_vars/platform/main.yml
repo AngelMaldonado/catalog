@@ -1,2 +1,8 @@
 ---
 catalog_app_domain: octopusslp.online
+
+# The droplet has 512 MiB of RAM and no swap: apt upgrades and image pulls next to
+# PocketBase and Caddy need the headroom. (The sandbox leaves swap off: a
+# container cannot swapon.)
+swap_enabled: true
+swap_file_size_mb: 1024

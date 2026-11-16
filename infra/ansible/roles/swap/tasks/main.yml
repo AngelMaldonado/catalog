@@ -1,0 +1,57 @@
+---
+- name: Configure host swap
+  when: swap_enabled | bool
+  block:
+    - name: Validate swap policy
+      ansible.builtin.assert:
+        that:
+          - swap_files | length > 0
+          - swap_files | map(attribute='path') | select('match', '^/') | list | length == swap_files | length
+          - swap_files | map(attribute='size_mb') | map('int') | select('lt', 512) | list | length == 0
+          - swap_swappiness | int >= 0
+          - swap_swappiness | int <= 100
+        fail_msg: "Declare each swap file with an absolute path and at least 512 MiB, and swappiness between 0 and 100."
+
+    - name: Install swap management tools
+      ansible.builtin.apt:
+        name:
+          - procps
+          - util-linux
+        state: present
+        update_cache: false
+
+    - name: Converge each declared swap file
+      ansible.builtin.include_tasks: swapfile.yml
+      loop: "{{ swap_files }}"
+      loop_control:
+        loop_var: swap_item
+        label: "{{ swap_item.path }}"
+
+    - name: Persist swap tendency
+      ansible.builtin.copy:
+        content: "vm.swappiness = {{ swap_swappiness }}\n"
+        dest: /etc/sysctl.d/90-catalog-swap.conf
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Inspect the active swap tendency
+      ansible.builtin.command:
+        argv:
+          - sysctl
+          - -n
+          - vm.swappiness
+      register: swap_active_swappiness
+      check_mode: false
+      changed_when: false
+
+    - name: Apply the swap tendency
+      ansible.builtin.command:
+        argv:
+          - sysctl
+          - -w
+          - "vm.swappiness={{ swap_swappiness }}"
+      when:
+        - not ansible_check_mode
+        - swap_active_swappiness.stdout != (swap_swappiness | string)
+      changed_when: true
