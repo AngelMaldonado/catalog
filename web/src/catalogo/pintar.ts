@@ -86,11 +86,14 @@ export function pintarPagina(ctx: CanvasRenderingContext2D, w: number, h: number
   const cuerpo = (px: number, peso = 500) => `${peso} ${Math.round(px)}px Inter Variable, system-ui, sans-serif`
 
   if (p.tipo === 'portada') {
-    if (c.negocio.logo) cubrir(ctx, c.negocio.logo, w / 2 - 11 * u, h * 0.3, 22 * u, 22 * u, 'contain')
+    const base = h * 0.47 // primera línea del título
+    // con logo, la marca se apila hacia arriba desde el título: nombre a 16u y el logo encima
+    const nombreY = c.negocio.logo ? base - 16 * u : h * 0.3
+    if (c.negocio.logo) cubrir(ctx, c.negocio.logo, w / 2 - 11 * u, nombreY - 30 * u, 22 * u, 22 * u, 'contain')
     ctx.font = cuerpo(4.2 * u, 600)
-    ctx.fillText(c.negocio.nombre.toUpperCase(), w / 2, h * 0.3 + (c.negocio.logo ? 28 * u : 0))
+    ctx.fillText(c.negocio.nombre.toUpperCase(), w / 2, nombreY)
     ctx.font = titulo(13 * u)
-    renglones(ctx, c.catalogo, 76 * u, 3).forEach((l, i) => ctx.fillText(l, w / 2, h * 0.47 + i * 14 * u))
+    renglones(ctx, c.catalogo, 76 * u, 3).forEach((l, i) => ctx.fillText(l, w / 2, base + i * 14 * u))
   } else if (p.tipo === 'separador') {
     ctx.font = titulo(14 * u)
     renglones(ctx, p.seccion.nombre, 76 * u, 2).forEach((l, i) => ctx.fillText(l, w / 2, h * 0.52 + i * 15 * u))
