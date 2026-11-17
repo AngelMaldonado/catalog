@@ -127,8 +127,9 @@ export function pintarPagina(ctx: CanvasRenderingContext2D, w: number, h: number
   } else if (p.tipo === 'portada') {
     const base = h * 0.47 // primera línea del título
     // con logo, la marca se apila hacia arriba desde el título: nombre a 16u y el logo encima
+    // (caja de 48u × 42u: un logo apaisado ocupa casi la mitad del ancho)
     const nombreY = c.negocio.logo ? base - 16 * u : h * 0.3
-    if (c.negocio.logo) cubrir(ctx, c.negocio.logo, w / 2 - 11 * u, nombreY - 30 * u, 22 * u, 22 * u, 'contain')
+    if (c.negocio.logo) cubrir(ctx, c.negocio.logo, w / 2 - 24 * u, nombreY - 48 * u, 48 * u, 42 * u, 'contain')
     ctx.font = cuerpo(4.2 * u, 600)
     ctx.fillText(c.negocio.nombre.toUpperCase(), w / 2, nombreY)
     ctx.font = titulo(13 * u)

@@ -49,7 +49,7 @@ export const NOMBRES: Record<IdElemento, string> = {
 
 /** Rango del control de tamaño por tipo de elemento. */
 export const rangoTamano = (id: IdElemento): [number, number] =>
-  id === 'logo' ? [0.05, 0.5] : id.startsWith('producto') ? [0.1, 0.8] : id === 'titulo' ? [0.03, 0.2] : [0.015, 0.09]
+  id === 'logo' ? [0.05, 0.8] : id.startsWith('producto') ? [0.1, 0.8] : id === 'titulo' ? [0.03, 0.2] : [0.015, 0.09]
 
 function contener(ctx: CanvasRenderingContext2D, img: ImageBitmap, cx: number, cy: number, lado: number) {
   const k = Math.min(lado / img.width, lado / img.height)
@@ -123,7 +123,7 @@ export const portadaInicial = (): DisenoPortada => ({
   subtitulo: '',
   productos: [],
   elementos: [
-    { id: 'logo', visible: true, x: 0.5, y: 0.25, s: 0.22 },
+    { id: 'logo', visible: true, x: 0.5, y: 0.215, s: 0.44 },
     { id: 'negocio', visible: true, x: 0.5, y: 0.355, s: 0.042 },
     { id: 'titulo', visible: true, x: 0.5, y: 0.5, s: 0.13, ancho: 0.76 },
     { id: 'subtitulo', visible: false, x: 0.5, y: 0.64, s: 0.045 },

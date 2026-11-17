@@ -11,11 +11,13 @@ import { arteDe, guardarProducto, plantillasDe, totalRenders } from '../lib/mock
 import { usePlantillas } from '../lib/datos'
 import { Encabezado } from '../components/shell/Encabezado'
 import { Button } from '../components/ui/button'
+import { Input, Label } from '../components/ui/input'
 import { EditorConCajon } from './colocacion/EditorConCajon'
 import { ControlesColocacion, VistaColocacion } from './colocacion/VistaColocacion'
 
 // Ajuste en lote: la misma colocación (tamaño, rotación y posición) para todos los productos
-// elegidos en el detalle del catálogo (decidido en el hilo «Tamaño libre y ajuste en lote»).
+// elegidos en el detalle del catálogo (decidido en el hilo «Tamaño libre y ajuste en lote»), y
+// opcionalmente el mismo precio (vacío = cada uno conserva el suyo).
 // La vista previa recorre los productos para ver cómo queda en cada uno antes de guardar.
 export function AjusteLotePage() {
   const { id = '' } = useParams()
@@ -47,6 +49,7 @@ export function AjusteLotePage() {
     if (lista[0]) setCol(lista[0].placement ?? COLOCACION_INICIAL)
   }, [lista[0]?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [precio, setPrecio] = useState('')
   const [progreso, setProgreso] = useState<string | null>(null)
   async function guardar() {
     if (!lista.length || !negocio) return
@@ -58,7 +61,7 @@ export function AjusteLotePage() {
         const diseno = p.expand!.design!
         const a = await qc.fetchQuery({ queryKey: ['arte', diseno.id], queryFn: () => arteDe(diseno), staleTime: Infinity })
         let antes = 0
-        await guardarProducto(p, { placement: col }, todas, a, negocio.business_name, (h) => {
+        await guardarProducto(p, precio ? { placement: col, price: Number(precio) || 0 } : { placement: col }, todas, a, negocio.business_name, (h) => {
           hechos += h - antes
           antes = h
           setProgreso(`${hechos} de ${total} imágenes`)
@@ -114,8 +117,12 @@ export function AjusteLotePage() {
       controles={
         <div className="space-y-4">
           <ControlesColocacion col={col} onCol={setCol} />
+          <div className="space-y-2">
+            <Label htmlFor="precio-lote">Precio ({negocio?.currency ?? 'MXN'})</Label>
+            <Input id="precio-lote" inputMode="numeric" placeholder="Sin cambiar" value={precio} onChange={(e) => setPrecio(e.target.value.replace(/[^\d.]/g, ''))} />
+          </div>
           <p className="rounded-2xl bg-muted px-3 py-2.5 text-sm text-muted-foreground">
-            El tamaño, la rotación y la posición se aplican iguales a los {n} productos. Recorre la vista previa para revisar cómo queda en cada uno.
+            El tamaño, la rotación y la posición se aplican iguales a los {n} productos{precio ? ', y también el precio' : '; si escribes un precio, también'}. Recorre la vista previa para revisar cómo queda en cada uno.
           </p>
         </div>
       }
