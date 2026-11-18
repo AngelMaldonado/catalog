@@ -10,7 +10,7 @@ Catálogo de temporada «de bolsillo» para negocios chicos de ropa estampada: e
 - `pb/pb_migrations/`: esquema y datos base como migraciones JS. Nunca edites una migración aplicada; agrega otra.
 - `pb/pb_hooks/`: lógica de servidor en JS.
   - `meta.pb.js`: `/api/meta` (versión y commit de la imagen) y `/api/health`.
-  - `visor.pb.js` tiene `/api/visor[/:slug]` (datos públicos con URLs firmadas de 10 min), `/api/r/:id/:tam` (renders), `/api/visor/evento` (contadores), y `/` y `/c/:slug` con las etiquetas OG.
+  - `visor.pb.js` tiene `/api/visor/:slug` (datos públicos con URLs firmadas de 10 min), `/api/r/:id/:tam` (renders), `/api/visor/evento` (contadores), y `/` (lista los catálogos publicados) y `/c/:slug` con las etiquetas OG.
   - Cada handler corre aislado: el código compartido va en `lib/` y se carga con `require()`.
 - `web/src/visor/`: visor público.
   - `datos.ts` pinta cada página bajo demanda con `pintarPagina`.
