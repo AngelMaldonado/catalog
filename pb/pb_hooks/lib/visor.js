@@ -110,12 +110,9 @@ function libro(cat) {
 
 /** Published catalog by slug, or the current one ('' slug). Null when not visible. */
 function publicado(slug) {
+  if (!slug) return null
   try {
-    if (slug) return $app.findFirstRecordByFilter('catalogs', "slug = {:s} && status = 'published'", { s: slug })
-    const id = $app.findFirstRecordByFilter('settings', '').getString('current_catalog')
-    if (!id) return null
-    const c = $app.findRecordById('catalogs', id)
-    return c.getString('status') === 'published' ? c : null
+    return $app.findFirstRecordByFilter('catalogs', "slug = {:s} && status = 'published'", { s: slug })
   } catch (_) {
     return null
   }

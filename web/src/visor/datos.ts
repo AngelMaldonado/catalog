@@ -1,4 +1,4 @@
-// Datos del visor público: /api/visor[/slug] (hook de PocketBase) con URLs firmadas de los
+// Datos del visor público: /api/visor/slug (hook de PocketBase) con URLs firmadas de los
 // renders. Arma las páginas con maquetar() y pinta cada página bajo demanda, cargando sólo las
 // imágenes que esa página necesita (precarga en ventana, decidido en el spike).
 import type { FondoPagina } from '../lib/types'
@@ -36,8 +36,8 @@ export interface RespuestaVisor {
   caduca: number
 }
 
-export async function pedirVisor(slug?: string): Promise<RespuestaVisor> {
-  const r = await fetch(slug ? `/api/visor/${encodeURIComponent(slug)}` : '/api/visor')
+export async function pedirVisor(slug: string): Promise<RespuestaVisor> {
+  const r = await fetch(`/api/visor/${encodeURIComponent(slug)}`)
   if (!r.ok) throw Object.assign(new Error('visor'), { status: r.status })
   return r.json()
 }
@@ -51,7 +51,7 @@ const decodificar = (url: string) =>
 export class FuentePaginas {
   paginas: PaginaPintable[]
   private datos: RespuestaVisor
-  private slug?: string
+  private slug: string
   private bitmaps = new Map<string, Promise<ImageBitmap | undefined>>()
   private lienzos = new Map<string, Promise<HTMLCanvasElement>>()
   private orden: string[] = []
@@ -59,7 +59,7 @@ export class FuentePaginas {
   private renovando: Promise<void> | null = null
   private productos = new Map<string, ProductoVisor>()
 
-  constructor(datos: RespuestaVisor, modo: Modo, slug?: string) {
+  constructor(datos: RespuestaVisor, modo: Modo, slug: string) {
     this.datos = datos
     this.slug = slug
     datos.productos.forEach((p) => this.productos.set(p.id, p))

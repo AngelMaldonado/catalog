@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { BookOpen, CircleAlert, Plus } from 'lucide-react'
 import { pb } from '../lib/pb'
 import type { Catalog } from '../lib/types'
-import { useNegocio } from '../lib/negocio'
 import { Pantalla } from '../components/shell/Pantalla'
 import { Encabezado } from '../components/shell/Encabezado'
 import { Estado } from '../components/shell/Estado'
@@ -15,7 +14,6 @@ const VUELTA = { rigid: 'Hoja rígida', realistic: 'Página realista' } as const
 
 export function CatalogsPage() {
   const [nuevo, setNuevo] = useState(false)
-  const { data: negocio } = useNegocio()
   const { data, isPending, error } = useQuery({
     queryKey: ['catalogs'],
     queryFn: () => pb.collection('catalogs').getFullList<Catalog>({ sort: '-created', expand: 'theme' }),
@@ -44,7 +42,6 @@ export function CatalogsPage() {
                 extra={
                   <span className="flex flex-col items-end gap-1">
                     <Estado tono={c.status === 'published' ? 'exito' : 'neutro'} texto={c.status === 'published' ? 'Publicado' : 'Borrador'} />
-                    {negocio?.current_catalog === c.id && <Estado tono="info" texto="Vigente" />}
                   </span>
                 }
               />

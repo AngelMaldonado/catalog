@@ -13,7 +13,6 @@ export function Compartir({ catalogo, abierta, onClose }: { catalogo: Catalog; a
   const { data: negocio } = useNegocio()
   const [qr, setQr] = useState('')
   const [copiado, setCopiado] = useState(false)
-  const vigente = negocio?.current_catalog === catalogo.id
   const url = `${location.origin}/c/${catalogo.slug}`
   const publicado = catalogo.status === 'published'
 
@@ -42,7 +41,6 @@ export function Compartir({ catalogo, abierta, onClose }: { catalogo: Catalog; a
         <div className="space-y-4">
           {qr && <img src={qr} alt={`Código QR de ${url}`} className="mx-auto block size-56 rounded-2xl bg-white" />}
           <p className="rounded-2xl bg-muted px-3 py-2.5 text-center font-mono text-sm break-all">{url}</p>
-          {vigente && <p className="text-center text-sm text-muted-foreground">También se ve en la raíz: {location.origin}</p>}
           <div className="grid grid-cols-3 gap-2">
             <Button variant="outline" size="sm" onClick={copiar}>
               {copiado ? <Check /> : <Copy />} {copiado ? 'Copiado' : 'Copiar'}

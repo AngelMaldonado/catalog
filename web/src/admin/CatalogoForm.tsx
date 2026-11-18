@@ -7,7 +7,6 @@ import { pb } from '../lib/pb'
 import { slugify } from '../lib/slug'
 import { cn } from '../lib/utils'
 import { useTemas } from '../lib/datos'
-import { useNegocio } from '../lib/negocio'
 import { FONDOS, type Catalog, type FondoPagina, type PageTurn } from '../lib/types'
 import { cargarLibro } from '../catalogo/libro'
 import { imagenOg } from '../catalogo/og'
@@ -23,13 +22,12 @@ import { confirmar } from '../components/shell/Confirmar'
 
 const NOMBRE_FONDO: Record<FondoPagina, string> = { cover: 'Portada', divider: 'Separador', products: 'Productos', promo: 'Promoción', back: 'Contraportada', filler: 'Relleno (pliego)' }
 
-/** Crear (sin `catalogo`) o editar un catálogo; los fondos propios se suben desde la creación. Editar agrega publicar, vigente,
+/** Crear (sin `catalogo`) o editar un catálogo; los fondos propios se suben desde la creación. Editar agrega publicar,
  *  duplicar y eliminar. */
 export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalog; abierta: boolean; onClose: () => void }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const { data: temas = [] } = useTemas()
-  const { data: negocio } = useNegocio()
   const editar = !!catalogo
   const [nombre, setNombre] = useState('')
   const [slug, setSlug] = useState('')
@@ -44,7 +42,6 @@ export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalo
     if (abierta) FUENTES.forEach((f) => void cargarFuente(f.id))
   }, [abierta])
   const [publicado, setPublicado] = useState(false)
-  const [vigente, setVigente] = useState(false)
   const [fondos, setFondos] = useState<Partial<Record<FondoPagina, File | null>>>({})
   const [ocupado, setOcupado] = useState<string | null>(null)
 
@@ -59,9 +56,8 @@ export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalo
     setRealce(catalogo?.product_highlight || 'brillo')
     setFuente(catalogo?.title_font ?? '')
     setPublicado(catalogo?.status === 'published')
-    setVigente(!!catalogo && negocio?.current_catalog === catalogo.id)
     setFondos({})
-  }, [abierta, catalogo, editar, temas, negocio?.current_catalog])
+  }, [abierta, catalogo, editar, temas])
 
   const cambiarNombre = (v: string) => {
     setNombre(v)
@@ -91,14 +87,9 @@ export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalo
         f2.append('og_image', new File([og], 'compartir.jpg', { type: 'image/jpeg' }))
         guardado = await pb.collection('catalogs').update<Catalog>(guardado.id, f2)
       }
-      if (negocio) {
-        const esVigente = negocio.current_catalog === guardado.id
-        if (vigente !== esVigente) await pb.collection('settings').update(negocio.id, { current_catalog: vigente ? guardado.id : '' })
-      }
       qc.invalidateQueries({ queryKey: ['catalogs'] })
       qc.invalidateQueries({ queryKey: ['catalog', guardado.id] })
       qc.invalidateQueries({ queryKey: ['libro', guardado.id] })
-      qc.invalidateQueries({ queryKey: ['settings'] })
       toast.success(editar ? 'Catálogo guardado' : 'Catálogo creado')
       onClose()
       if (!editar) navigate(`/admin/catalogos/${guardado.id}`, { viewTransition: true })
@@ -131,10 +122,8 @@ export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalo
     if (!catalogo || !(await confirmar({ titulo: `¿Eliminar «${catalogo.name}»?`, texto: 'Se borran también todos sus productos e imágenes. No se puede deshacer.', accion: 'Eliminar', peligro: true }))) return
     setOcupado('Eliminando…')
     try {
-      if (negocio?.current_catalog === catalogo.id) await pb.collection('settings').update(negocio.id, { current_catalog: '' })
       await pb.collection('catalogs').delete(catalogo.id)
       qc.invalidateQueries({ queryKey: ['catalogs'] })
-      qc.invalidateQueries({ queryKey: ['settings'] })
       toast.success('Catálogo eliminado')
       onClose()
       navigate('/admin', { replace: true, viewTransition: true })
@@ -267,8 +256,7 @@ export function CatalogoForm({ catalogo, abierta, onClose }: { catalogo?: Catalo
         {editar && (
           <>
             <div className="divide-y rounded-2xl border px-4">
-              <Interruptor etiqueta="Publicado" ayuda="Visible para tus clientes en su dirección." activo={publicado} onCambio={setPublicado} />
-              <Interruptor etiqueta="Catálogo vigente" ayuda="El que se ve en la raíz de tu sitio." activo={vigente} onCambio={setVigente} />
+              <Interruptor etiqueta="Publicado" ayuda="Visible en su dirección y en la lista de catálogos de la raíz de tu sitio." activo={publicado} onCambio={setPublicado} />
             </div>
 
 

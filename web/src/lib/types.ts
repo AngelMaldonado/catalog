@@ -131,6 +131,4 @@ export interface Settings extends RecordModel {
   tiktok: string
   address: string
   currency: string
-  current_catalog: string
-  expand?: { current_catalog?: Catalog }
 }

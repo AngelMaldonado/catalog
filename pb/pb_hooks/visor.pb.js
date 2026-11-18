@@ -1,15 +1,8 @@
 /// <reference path="../../pb_data/types.d.ts" />
 // Public viewer routes (thread «Visor público»). Shared code lives in lib/visor.js.
 
-// Catalog data for the viewer: the current catalog, or one by slug. Only published catalogs.
-routerAdd('GET', '/api/visor', (e) => {
-  const v = require(`${__hooks}/lib/visor.js`)
-  const cat = v.publicado('')
-  if (!cat) return e.json(404, { message: 'No hay catálogo vigente.' })
-  e.response.header().set('Cache-Control', 'no-store')
-  return e.json(200, v.libro(cat))
-})
-
+// Catalog data for the viewer, by slug. Only published catalogs; every catalog lives at /c/<slug>
+// and the root lists them (the SPA reads the list straight from the `catalogs` collection).
 routerAdd('GET', '/api/visor/{slug}', (e) => {
   const v = require(`${__hooks}/lib/visor.js`)
   const cat = v.publicado(e.request.pathValue('slug'))
@@ -84,7 +77,7 @@ routerAdd('GET', '/c/{slug}', (e) => {
 
 routerAdd('GET', '/{$}', (e) => {
   const v = require(`${__hooks}/lib/visor.js`)
-  const html = v.indexConMeta(e, v.publicado(''))
+  const html = v.indexConMeta(e, null)
   if (html === null) return e.json(404, { message: 'Sin index.html' })
   return e.html(200, html)
 })

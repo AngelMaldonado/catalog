@@ -74,7 +74,6 @@ export function CatalogDetailPage() {
   }
 
   const c = catalogo.data
-  const vigente = !!c && negocio?.current_catalog === c.id
   return (
     <Pantalla
       encabezado={<Encabezado titulo={c?.name ?? 'Catálogo'} atras="/admin" />}
@@ -96,7 +95,6 @@ export function CatalogDetailPage() {
         <section className="mx-3 mt-3 rounded-3xl border bg-card p-4 shadow-sm sm:mx-auto sm:w-full sm:max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
             <Estado tono={c.status === 'published' ? 'exito' : 'neutro'} texto={c.status === 'published' ? 'Publicado' : 'Borrador'} />
-            {vigente && <Estado tono="info" texto="Vigente" />}
             <span className="text-sm text-muted-foreground">
               {c.expand?.theme?.name} · {VUELTA[c.page_turn]} · {c.layout} por página
             </span>

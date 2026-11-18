@@ -27,10 +27,9 @@ const suscribir = (cb: () => void) => {
 }
 const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
-/** Visor del catálogo publicado (por slug, o el vigente si no hay slug). `sinVigente` se muestra
- *  cuando no hay catálogo vigente (la raíz cae a la página de contacto). */
-export function VisorPage({ slug, sinVigente }: { slug?: string; sinVigente?: React.ReactNode }) {
-  const datos = useQuery({ queryKey: ['visor', slug ?? ''], queryFn: () => pedirVisor(slug), staleTime: Infinity, retry: false })
+/** Visor de un catálogo publicado, por slug (todos viven en /c/:slug; la raíz los lista). */
+export function VisorPage({ slug }: { slug: string }) {
+  const datos = useQuery({ queryKey: ['visor', slug], queryFn: () => pedirVisor(slug), staleTime: Infinity, retry: false })
   const pliego = useSyncExternalStore(suscribir, horizontal)
   const [lento, setLento] = useState(() => sessionStorage.getItem('visor-lento') === '1')
   const [vista, setVista] = useState<Vista>({ izq: null, der: 0 })
@@ -59,7 +58,6 @@ export function VisorPage({ slug, sinVigente }: { slug?: string; sinVigente?: Re
       </div>
     )
   if (datos.error || !datos.data || !fuente) {
-    if (!slug && sinVigente) return <>{sinVigente}</>
     return (
       <div className="flex h-dvh flex-col">
         <Vacio icono={BookX} titulo="Catálogo no disponible" texto="Este catálogo no existe o todavía no está publicado." />
